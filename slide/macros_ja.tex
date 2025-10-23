@@ -1,0 +1,201 @@
+\usepackage[utf8]{inputenc}
+\usepackage{bxdpx-beamer} % dvipdfmxなので必要
+
+\usetheme{Boadilla}
+%Beamerフォント設定
+\usefonttheme{professionalfonts}
+\usepackage[T1]{fontenc}
+\usepackage[deluxe,uplatex]{otf} % 日本語多ウェイト化
+\usepackage{mlmodern}  % 太いComputer Modern
+% MLmodernのバグを修正: cf. https://tex.stackexchange.com/questions/646333/size-of-integral-symbol-in-section-header-with-mlmodern
+\DeclareFontFamily{OMX}{mlmex}{}
+\DeclareFontShape{OMX}{mlmex}{m}{n}{%
+   <->mlmex10%
+   }{}
+\usepackage{newtxtext} % 数式以外をTXフォントで上書き
+% \usepackage[noalphabet,unicode]{pxchfon}
+% \setminchofont{KozMinPro-Regular.otf}% 游明朝Regular
+% \setboldminchofont{KozMinPro-Bold.otf}% 游明朝Demibold
+% \setgothicfont[0]{BIZ-UDGothicR.ttc}% BIZ UDゴシックR
+% \setboldgothicfont[0]{BIZ-UDGothicB.ttc}% BIZ UDゴシックB
+\renewcommand{\familydefault}{\sfdefault}  % 英文をサンセリフ体に
+\renewcommand{\kanjifamilydefault}{\gtdefault}  % 日本語をゴシック体に
+\usefonttheme{structurebold} % タイトル部を太字
+\setbeamerfont{alerted text}{series=\bfseries} % Alertを太字
+\setbeamerfont{section in toc}{series=\mdseries} % 目次は太字にしない
+\setbeamerfont{frametitle}{size=\Large} % フレームタイトル文字サイズ
+\setbeamerfont{title}{size=\LARGE} % タイトル文字サイズ
+\setbeamerfont{date}{size=\small}  % 日付文字サイズ
+\usepackage{bxcoloremoji}
+
+% Babel (日本語の場合のみ・英語の場合は不要)
+\uselanguage{japanese}
+\languagepath{japanese}
+\deftranslation[to=japanese]{Theorem}{定理}
+\deftranslation[to=japanese]{Lemma}{補題}
+\deftranslation[to=japanese]{Example}{例}
+\deftranslation[to=japanese]{Examples}{例}
+\deftranslation[to=japanese]{Definition}{定義}
+\deftranslation[to=japanese]{Definitions}{定義}
+\deftranslation[to=japanese]{Problem}{問題}
+\deftranslation[to=japanese]{Solution}{解}
+\deftranslation[to=japanese]{Fact}{事実}
+\deftranslation[to=japanese]{Proof}{証明}
+\def\proofname{証明}
+\setbeamertemplate{theorems}[normal font] %日本語の場合，定理内を斜体にしない
+
+%Beamer色設定
+\definecolor{UniBlue}{RGB}{0,150,200}
+\definecolor{UniGreen}{RGB}{3,175,122}
+\definecolor{UniPink}{RGB}{255,128,255}
+\definecolor{AlertOrange}{RGB}{255,76,0}
+\definecolor{AlmostBlack}{RGB}{38,38,38}
+\setbeamercolor{normal text}{fg=AlmostBlack}  % 本文カラー
+\setbeamercolor{structure}{fg=UniBlue} % 見出しカラー
+\setbeamercolor{block title}{fg=UniBlue!50!black} % ブロック部分タイトルカラー
+\setbeamercolor{alerted text}{fg=AlertOrange} % \alert 文字カラー
+\setbeamercolor{bibliography entry author}{fg=AlmostBlack} % Bib 文字カラー
+\setbeamercolor{bibliography entry note}{fg=AlmostBlack} % Bib 文字カラー
+\mode<beamer>{
+    \definecolor{BackGroundGray}{RGB}{254,254,254}
+    \setbeamercolor{background canvas}{bg=BackGroundGray} % スライドモードのみ背景をわずかにグレーにする
+}
+
+%フラットデザイン化
+\setbeamertemplate{blocks}[rounded] % Blockの影を消す
+\useinnertheme{circles} % 箇条書きをシンプルに
+\setbeamertemplate{navigation symbols}{} % ナビゲーションシンボルを消す
+\setbeamertemplate{footline}[frame number] % フッターはスライド番号のみ
+
+%タイトルページ
+\setbeamertemplate{title page}{%
+    \vspace{2.5em}
+    {\usebeamerfont{title} \usebeamercolor[fg]{title} \inserttitle \par}
+    {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle \par}
+
+    \vspace{1.5em}
+    \begin{columns}[]
+        \begin{column}{.35\linewidth}
+        \usebeamerfont{titlegraphic}\inserttitlegraphic\par
+        \end{column}
+        \begin{column}{.6\linewidth}\setlength\topsep{0pt}
+            \begin{flushright}
+        \usebeamerfont{author}\insertauthor\par
+        \usebeamerfont{institute}\insertinstitute \par
+        \vspace{3em}
+        \usebeamerfont{date}\insertdate\par
+            \end{flushright}
+        \end{column}
+    \end{columns}
+}
+
+%biblatex
+% \usepackage[style=ext-authoryear,citestyle=authoryear,natbib=true,giveninits=true,maxbibnames=99,maxcitenames=10,url=false,isbn=false,doi=false,articlein=false]{biblatex}
+% \DeclareNameAlias{author}{first-last}
+% \addbibresource{shrunk.bib}
+% \newcommand{\mkbibbracketscol}[1]{\textcolor{UniBlue}{\scriptsize \mkbibbrackets{#1}}}
+% \DeclareCiteCommand{\cite}[\mkbibbracketscol]
+%   {\usebibmacro{prenote}}
+%   {\usebibmacro{citeindex}%
+%    \usebibmacro{cite}}
+%   {\multicitedelim}
+%   {\usebibmacro{postnote}}
+% % \renewcommand{\cite}[1]{\textcolor{UniBlue}{\scriptsize\citep{#1}}}
+% \renewcommand*{\finalnamedelim}{\addcomma\addspace} % remove "and" before the last author
+% \DeclareDelimFormat{nameyeardelim}{\addspace}
+% \setbeamertemplate{bibliography item}{}
+
+% Algorithm系
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
+\algsetup{linenosize=\color{fg!50}\footnotesize}
+\renewcommand\algorithmicdo{:}
+\renewcommand\algorithmicthen{:}
+\renewcommand\algorithmicrequire{\textbf{Input:}}
+\renewcommand\algorithmicensure{\textbf{Output:}}
+\renewcommand\algorithmiccomment[1]{\hfill\textcolor{fg!50}{\footnotesize\textit{// #1}}}
+
+% TikZ
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows,quotes,shapes.callouts,calc,graphs,graphs.standard,fit,backgrounds,perspective}
+\tikzset{point/.style={circle, fill=AlertOrange, inner sep=1pt, text width=1pt}}
+\tikzset{bpoint/.style={circle, fill=black, inner sep=1pt, text width=1pt}}
+\tikzset{alt/.code args={<#1>#2#3}{\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}}}
+\tikzset{>=latex}
+\tikzset{mynodes/.style={circle,white,fill=UniBlue!90,text width=.8em,inner sep=0pt,text centered,font=\footnotesize}}
+\tikzset{myedges/.style={thick}}
+\tikzset{mypath/.style={ultra thick, draw=AlertOrange}}
+\tikzset{mypath2/.style={ultra thick, dashed, draw=UniGreen}}
+\tikzset{mysubset/.style={draw,UniBlue,dotted,thick,fill=UniBlue!10}}
+\tikzset{graphs/mygraph/.style={nodes={mynodes}, edges={myedges}, empty nodes}}
+%% graph macros
+\tikzgraphsset{declare={mybipartite}{%
+subgraph I_nm [V={1,2,3,4,5,6}, W={a,b,c,d,e,f}];
+1 -- {a,b};
+2 -- {b,c,d,e};
+3 -- {d,f};
+4 -- {e,f};
+{5,6} -- f;
+}}
+\tikzgraphsset{declare={mybipartitedi}{%
+subgraph I_nm [V={1,2,3,4,5,6}, W={a,b,c,d,e,f}];
+1 -> {a,b};
+2 -> {b,c,d,e};
+3 -> {d,f};
+4 -> {e,f};
+{5,6} -> f;
+}}
+\tikzgraphsset{declare={mybipartite2}{%
+subgraph I_nm [V={1,2,3}, W={a,b,c}];
+1 -- {a,b}; 2 -- {a,b,c}; 3 -- {a,c};
+}} 
+
+% Appendix
+\usepackage{appendixnumberbeamer}
+
+% macros
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\be}{\mathbf{e}}
+\newcommand{\ones}{\mathbf{1}}
+% \newcommand{\bp}{\mathbf{p}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\defiff}{\overset{\text{def}}{\iff}}
+\DeclareMathOperator{\poly}{poly}
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\inprod}{\langle}{\rangle}
+\usepackage[no-test-for-array]{nicematrix}
+\usepackage{diagbox}
+
+\newcommand{\highlightcap}[3][red]{\tikz[baseline=(x.base)]{\node[rectangle,rounded corners,fill=#1!10](x){#2} node[below=0pt of x, color=#1]{#3};}}
+\newcommand{\highlight}[2][red]{\tikz[baseline=(x.base)]{\node[rectangle,rounded corners,fill=#1!10](x){#2};}}
+\newcommand{\mycite}[2][\footnotesize]{\textcolor{UniBlue}{#1 [#2]}}
+
+%section
+% \AtBeginSection[]{
+%     \frame[c]{
+%         \centering
+%         \begin{tikzpicture}
+%             \node[white, circle, fill=UniBlue, text centered, text width=.3\linewidth](bullet) {
+%                 {\Huge \bf \insertsectionnumber} \\[4em]
+%     };
+%     \node[text width=.65\linewidth, right=1em of bullet]{%
+%         \usebeamerfont{title}\usebeamercolor[fg]{title}\insertsection\par %
+%     };
+%         \end{tikzpicture}
+%     } %目次スライド
+% }
+
+%grid
+% \usepackage[colorgrid,gridunit=pt,texcoord]{eso-pic}
+\newcommand{\postit}[1]{\tikz[overlay, remember picture]{\node[draw,anchor=north east, align=center, rectangle, fill=yellow!10,xshift=-1pt,yshift=-1pt] at (current page.north east) {#1};}}
+
+\usepackage{tcolorbox}
+\newtcolorbox{primal}{colback=red!10!white, colframe=red, title=主問題 (P), left=2pt,right=2pt,top=0pt,bottom=0pt}
+\newtcolorbox{dual}{colback=blue!10!white, colframe=blue, title=双対問題 (D), left=2pt,right=2pt,top=0pt,bottom=0pt}
+
+% visible on
+\usetikzlibrary{overlay-beamer-styles}

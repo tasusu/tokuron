@@ -1,0 +1,90 @@
+%!TEX root = polyhedra.tex
+\begin{frame}{本講義の概要}
+    
+    組合せ最適化の\alert{定跡}と\alert{アルゴリズム}を学ぶ．
+    \begin{itemize}
+        \item 二部マッチング，ネットワークフロー，マトロイドなどの定番問題
+        \item 最大最小定理
+        \item 線形計画法・多面体を用いたアルゴリズム設計
+        \item 劣モジュラ最適化としての統一的視点
+    \end{itemize}
+
+    \bigskip
+    \structure{事務連絡}
+    \begin{itemize}
+        \item Zoomのcontinuous chatで質問を受け付けます
+        \item スライドと録画は毎回google driveにアップロードします
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{}
+    \centering\small
+    \tikzset{block/.style={rectangle, draw=gray, fill=gray!10, thick, minimum width=3em, minimum height=2em, align=center}}
+    \begin{tikzpicture}
+        \node[block,] (BM) {重みなし\\二部マッチング};
+        \node[block,above=1em of BM.north west, xshift=-2em] (WBM) {重みつき\\二部マッチング};
+        \node[block,above=5em of BM.north east, xshift=1em] (NF) {最大流};
+        \node[block,above=9em of BM] (MCF) {最小費用流};
+        \node[block,above=1em of NF.north east, xshift=1em] (MC) {最小カット};
+        \node[block,right=11em of BM] (MTR) {マトロイド};
+        \node[block,above=7em of MTR] (MI) {マトロイド交差};
+        \node[block,above=3em of MCF, xshift=7em] (SFM) {劣モジュラ最小化};
+        \graph[mygraph]{
+            (BM) -> {(WBM), (NF)} -> (MCF);
+            {(MTR), (BM)} -> (MI);
+            % (NF) -> (MC);
+            {(MCF), (MC), (MI)} -> (SFM);
+        };
+        \begin{scope}[on background layer]
+        \onslide<2->
+            \node[mysubset, fit=(BM) (WBM), "二部マッチング" {below, UniBlue}]{};
+            \node[mysubset, AlertOrange, fill=AlertOrange!10, fit=(NF) (MCF), "ネットワークフロー" {above left, AlertOrange}]{};
+            \node[mysubset, UniGreen, fill=UniGreen!10, fit=(MTR) (MI), "マトロイド" {below, UniGreen}]{};
+        \end{scope}
+    \end{tikzpicture}
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+    \frametitle{各回の内容（予定）} 
+    \small
+    \begin{enumerate}
+        \item (10/23) イントロ+多面体的組合せ論（線形計画法の復習，整数多面体，完全単模行列）
+        \item (10/30) 二部マッチング①（Konig-Egervaryの定理，増加道アルゴリズム，ハンガリー法）
+        \item (11/6) 二部マッチング②（最短路問題の復習，閉路最適性基準と逐次最短路法，ポテンシャル最適性基準と主双対法，ハンガリー法再訪）
+        \item (11/13) 最大流① （定式化，最大流最小カット定理，Mengerの定理，Hakimiの定理，密グラフ抽出）
+        \item[] \textcolor{gray}{(11/20) 休み}
+        \item[] \textcolor{gray}{(11/27) 休み}
+        \item (12/4) 最大流②（残余ネットワーク，Ford-Fulkerson法，容量スケーリング法）
+        \item (12/11) 最小カット（永持茨木のアルゴリズム，Kargerのアルゴリズム）
+        \item (12/18) 最小費用流①（定式化，輸送問題，最大流との関係，応用？）
+        \item (12/25) 最小費用流②（閉路最適性基準，逐次最短路法，容量スケーリング法）
+        \item[] \textcolor{gray}{(1/1) 休み}
+        \item (1/8) マトロイド（定義と公理系，貪欲法，マトロイド多面体） 
+        \item[] \textcolor{gray}{(1/15) 休み}
+        \item (1/22) マトロイド交差①（定義，Edmondsの最大最小定理，応用例）
+        \item (1/29) マトロイド交差②（交換可能性グラフ，増加道アルゴリズム）
+        \item (2/5) 劣モジュラ関数①（諸例，劣モジュラ基多面体，Lov\'asz拡張，劣モジュラ最小化）
+        \item (2/12) 劣モジュラ関数②（劣モジュラ最大化，近似アルゴリズム，貪欲法）
+        \item[] \textcolor{gray}{(2/19) 予備}
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{参考図書}
+    \small
+    \structure{本講義のレベル}
+    \begin{itemize}
+        \item 垣村『組合せ最適化への招待 モデルとアルゴリズム』 SGCライブラリ, 2024. {\color{gray} \dotfill 色々なトピックがコンパクトにまとまっていて手軽}
+    \end{itemize}
+
+    \bigskip
+    \structure{大学院生～研究者向け}
+    \begin{itemize}
+        \item Korte and Vygen, \emph{Combinatorial Optimization: Theory and Algorithms}, 6th~ed, Springer, 2018.  {\color{gray} \dotfill Springer LinkからDL可能}
+    
+        \item 『組合せ最適化 原書6版: 理論とアルゴリズム』, 丸善出版, 2022. \\ {\color{gray} \dotfill 上の和訳}
+
+        \item Schrijver, \emph{Combinatorial Optimization: Polyhedra and Efficiency}, Springer, 2003. {\color{gray} \dotfill 凄い文量だがトピックごとに読める．大百科として}
+
+    \end{itemize}
+\end{frame}
