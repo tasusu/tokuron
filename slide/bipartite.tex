@@ -1,0 +1,901 @@
+\RequirePackage{plautopatch}
+\documentclass[14pt,aspectratio=169,xcolor=dvipsnames,table,onlytextwidth,dvipdfmx]{beamer}
+\input{macros_ja}
+\csname endofdump\endcsname
+\title{組合せ最適化特論}
+\subtitle{第2回（二部マッチング①）}
+\author{担当: \textbf{相馬 輔}}
+\date{2025/10/30}
+
+\begin{document}
+\maketitle
+
+\begin{frame}<1>[label=outline]{目次}
+\begin{tikzpicture}
+    \tikzstyle{block} = [rectangle, text width=\textwidth, rounded corners, minimum height=4em]
+    \tikzstyle{line} = [draw, -latex]
+
+    \node[block,alt={<1,3->{fill=cyan!10}{fill=red!10}}] (combopt) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{1. 二部マッチングの最大最小定理}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} LPの整数性（復習）\\
+                \structure{・} K\H{o}nig--Egerv\'aryの定理 
+                % \structure{・} 重み付き二部マッチングの最大最小定理
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-2,4->{fill=cyan!10}{fill=red!10}}, below=.5em of combopt] (LP) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{2. 重みなし二部マッチング}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 増加道アルゴリズム \\
+                \structure{・} K\H{o}nig--Egerv\'aryの定理再訪
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-3,5->{fill=cyan!10}{fill=red!10}}, below=.5em of LP] (TU) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{3. 重み付き二部マッチング}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 相補性条件 \\
+                \structure{・} ハンガリー法 
+            \end{column}
+        \end{columns}
+    };
+\end{tikzpicture}%
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{二部マッチングの最大最小定理}
+\againframe<2|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+    \frametitle{二部マッチング}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.6\textwidth}
+        \begin{block}{重み付き二部マッチング問題}
+            \structure{入力} $G=(V; E)$: 二部グラフ，枝重み$w_e$ ($e \in E$) \\
+            \structure{出力} $w(M) := \sum_{e\in M}w_e$が最大のマッチング$M$
+        \end{block}
+
+        \pause
+        \begin{block}{\alt<2>{IP}{LP}定式化}
+            \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{maximize} & \quad  \sum_{e \in E} w_e x_e \\
+            \text{subject to} & \quad \sum_{e \in \delta(i)} x_e \leq 1 & \quad (i \in V) \\
+            & \quad \alt<2>{x_e \in \{0,1\}}{} \only<3>{{\color{AlertOrange} x_e \geq 0}} & \quad (e \in E)
+        \end{alignat*}
+        \end{block}
+        \onslide<3->{係数行列の完全単模性により\textbf{常に}0--1のLP最適解をもつ！}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+        \tikz{
+            \graph[nodes={mynodes}, edges={myedges}, grow right=4em]{
+            subgraph I_nm [V={1,2,3}, W={4,5}];
+            1 -- {4,5};
+            2 -- {4,5};
+            3 -- {4};
+            % matching
+            {[edges={mypath}] {1,2} -- {4,5}; }
+        };
+        }
+        \footnotesize
+        \begin{alignat*}{3}
+            &\text{max}\quad  &&  w^\top x  \\
+            &\text{s.t.}\quad  && x_{14} + x_{15}  &&\leq 1 \\
+            & && x_{24} + x_{25}  &&\leq 1  \\
+            & && x_{34}  &&\leq 1  \\
+            & && x_{14} + x_{24} + x_{34} &&\leq 1  \\
+            & && x_{15} + x_{25} &&\leq 1  \\
+            & && x_{14}, x_{15}, x_{24}, x_{25}, x_{34} &&\in \{0, 1\} 
+        \end{alignat*}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{二部マッチング多面体}
+    \small
+    マッチング$M$の\alert{特性ベクトル (characteristic vector)} 
+    $\ones_M \in \{0, 1\}^E$を次のように定める:
+    \[
+        (\ones_M)_e =
+        \begin{cases}
+            1 & (e \in M) \\
+            0 & (e \notin M)
+        \end{cases}
+    \]
+    {\footnotesize ※$\chi_M$と書く流儀もある}
+
+    \bigskip
+    二部マッチング多面体: $P = \conv\{\ones_M : \text{$M$は$G$のマッチング}\}$
+
+    \bigskip
+    \begin{theorem}
+        二部マッチング多面体は次の線形不等式系で表される．
+        \begin{align*}
+            \sum_{e \in \delta(i)} x_e \leq 1 & \quad (i \in V) \\
+            x_e \geq 0 & \quad (e \in E)
+        \end{align*}
+    \end{theorem}
+\end{frame}
+
+\begin{frame}
+    \frametitle{二部マッチングの双対問題}
+    \small
+
+    \begin{columns}[T]
+    \begin{column}{.45\textwidth}
+    \begin{primal}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{max} & \quad  \sum_{e \in E} w_e x_e \\
+            \text{s.t.} & \quad \sum_{e \in \delta(i)} x_e \leq 1  \quad (i \in V) \\
+            & \quad x \geq 0 
+        \end{alignat*}
+    \end{primal}
+    \end{column}
+    \begin{column}{.45\textwidth}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{min} & \quad  \sum_{i \in V} y_i \\
+            \text{s.t.} & \quad y_i + y_j \geq w_e \quad (e=ij \in E) \\
+            & \quad y \geq 0
+        \end{alignat*}
+    \end{dual}
+    \end{column}
+    \end{columns}
+
+    \vfill
+    双対問題(D)の係数行列も完全単模．よって，枝重み$w_e$ ($e \in E$)が整数なら，(D)は整数最適解をもつ．
+\end{frame}
+
+\begin{frame}
+    \frametitle{K\H{o}nig--Egerv\'aryの定理}
+
+    $G = (V^+, V^-; E)$を$V^+, V^-$を頂点集合とする二部グラフとする．
+
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \begin{definition}
+        $S \subseteq V^+, T \subseteq V^-$ が\alert{頂点被覆} \\
+        $\defiff$ 任意の枝$e = ij \in E$に対し，$i \in S$または$j \in T$.
+    \end{definition}
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=4em]{
+            subgraph I_nm [V={1,2,3}, W={4,5}];
+            1 -- {4,5};
+            2 -- {4,5};
+            3 -- {4};
+        };
+        \begin{scope}[on background layer]
+            \node[mysubset, fit=(1) (2), "$S$" left ]{} ;
+            \node[mysubset, fit=(4), "$T$" right]{} ;
+        \end{scope}
+        \onslide<2->{
+            \graph[edges={mypath}] {{(1),(2)} -- {(4), (5)}; };
+        }
+        }
+        \footnotesize
+    \end{column}
+    \end{columns}
+    \onslide<2->
+    \begin{lemma}[弱双対性]
+        任意のマッチング$M$と頂点被覆$(S,T)$に対し，$\abs{M} \leq \abs{S} + \abs{T}$.
+    \end{lemma}
+    \structure{(証明)} $M$は端点を共有しないので，$M$を被覆するには少なくとも$\abs{M}$個の頂点が必要．\qed
+\end{frame}
+
+\begin{frame}
+    \frametitle{K\H{o}nig--Egerv\'aryの定理}
+    先のLPにおいて，$w \equiv 1$の場合を考えると，整数性と強双対定理から以下の定理が得られる．
+
+    \bigskip
+    \begin{theorem}[K\H{o}nig--Egerv\'ary]
+        二部グラフ$G$において，次の最大最小定理が成り立つ．
+        \[
+            \max_{\text{$M$:マッチング}} |M| = \min_{\text{$(S,T)$: 頂点被覆}} |S| + |T|
+        \]
+    \end{theorem}
+\end{frame}
+
+\begin{frame}
+    \frametitle{例}
+
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+        右の二部グラフにおいて，
+        
+        \begin{itemize}[<+(1)->]
+            \item 最大のマッチングは$|M| = 5$
+            \item 最小の頂点被覆は$|S| + |T| = 5$
+        \end{itemize}
+
+        \bigskip
+        \onslide<+->{
+        一般に，二部グラフにおいてマッチング$M$が最大であることを示すには，\[ |M| = |S| + |T| \]を満たす頂点被覆$(S,T)$を提示すれば良い．}
+        
+        \bigskip
+        \onslide<+->{
+        そのような頂点被覆は，$M$の最適性の証拠といえる\alert{（良い特徴づけ; good characterization）}}
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{ mybipartite; };
+        \onslide<2->{
+            \graph[edges={mypath}] {{(1),(2),(3),(4),(5)} -- {(b),(c),(d),(e),(f)}; };
+        }
+        \begin{scope}[on background layer]
+        \onslide<3->{
+            \node[mysubset, fit=(1) (2), "$S$" left ]{} ;
+            \node[mysubset, fit=(d) (e) (f), "$T$" right]{} ;
+        }
+        \end{scope}
+        }
+    \end{column}
+    \end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{重みなし二部マッチング}
+\againframe<3|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+    \frametitle{増加道}
+
+    $M$: $G$のマッチング \\
+    \begin{definition}
+        パス$P$が（$M$に対する）\alert{増加道} $\defiff$
+        \begin{enumerate}
+            \item $P$において$E \setminus M$と$M$の枝が交互に現れる．
+            \item $P$の始点と終点は$M$に接続していない頂点．
+        \end{enumerate} 
+    \end{definition}
+    \begin{center}
+        \tikz[baseline=(1.base)]{\graph[mygraph]{
+            1 -- 2 --[mypath, "{\footnotesize $\in M$}" {below, AlertOrange}] 3 --["{\footnotesize $\notin M$}" below] 4 --[mypath] 5 -- 6 --[mypath] 7 -- 8 ;
+        }} \quad \textcolor{AlertOrange}{$\abs M = 3$}
+        \pause
+        \\ $\downarrow$ 反転 \\[1em]
+        \tikz{\graph[mygraph]{
+            1 --[mypath] 2 -- 3 --[mypath] 4 -- 5 --[mypath] 6 -- 7 --[mypath] 8 ;
+        }} \quad \textcolor{AlertOrange}{$\abs M = 4$}
+    \end{center}
+
+    \vfill\pause
+    ∴ $M$が最大マッチング $\implies$ 増加道は存在しない
+\end{frame}
+
+\begin{frame}
+    \frametitle{増加道}
+
+    \begin{lemma}
+        $M$が最大でない $\implies$ 増加道が存在．
+    \end{lemma}
+
+    \pause
+    \structure{証明} \\
+    \newcommand{\M}{\textcolor{AlertOrange}{M}}
+    \newcommand{\Mp}{\textcolor{UniGreen}{M'}}
+    2つのマッチング$\M$, $\Mp$ ($\abs\M < \abs\Mp$) を取る．
+    すると，$\M + \Mp$の連結成分は交互道と長さ偶数のサイクルからなる．
+    \begin{center}
+        \tikz[]{\graph[mygraph]{1 --[bend left, mypath] 2; 1 --[bend right, mypath2] 2;}}
+        \quad
+        \tikz[baseline=(2.base)]{\graph[mygraph,clockwise]{subgraph I_n[n=4, radius=.7cm]; 
+            {[edges={mypath }] 1 -- 2; 3 -- 4; };
+            {[edges={mypath2}] 2 -- 3; 4 -- 1; };
+        }}
+        \quad
+        \begin{tabular}{c}
+        \tikz{\graph[mygraph]{
+            1 --[mypath] 2 --[mypath2] 3 --[mypath] 4 --[mypath2] 5;
+        }} \\
+        \tikz{\graph[mygraph]{
+            1 --[mypath] 2 --[mypath2] 3 --[mypath] 4;
+        }} \\
+        \tikz{\graph[mygraph]{
+            1 --[mypath2] 2 --[mypath] 3 --[mypath2] 4 --[mypath] 5 --[mypath2] 6;
+        }} 
+        \end{tabular}
+    \end{center}
+    いま，$\abs\M < \abs\Mp$より，$\M + \Mp$の連結成分の中に，交互道で始点と終点が$\M$の端点でないものが存在する．これは$\M$に対する増加道． \qed
+\end{frame}
+
+\begin{frame}
+    \frametitle{増加道アルゴリズム}
+
+    補題より，以下のようなアルゴリズムが考えられる．
+
+    \begin{block}{増加道アルゴリズム}
+        \begin{algorithmic}[1]
+            \STATE $M \gets \emptyset$とする．
+            \WHILE{$M$に対する増加道が存在する}
+                \STATE 増加道の1つを求めて$P$とする．
+                \STATE $P$に沿って枝を反転して，より大きなマッチング$M$を得る．
+            \ENDWHILE
+            \RETURN $M$
+        \end{algorithmic} 
+    \end{block}
+
+    \bigskip
+    増加道$P$を$A$時間で求められれば，全体は$O(nA)$時間アルゴリズム．
+\end{frame}
+
+\begin{frame}
+    \frametitle{有向グラフを用いた増加道探索}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    マッチング$M$に対し，$G$の枝を
+    \begin{itemize}
+        \item $M$の枝は両向き，
+        \item $E\setminus M$の枝は$V^+$から$V^-$向き
+    \end{itemize}
+    に向き付けた有向グラフを$D_M$とする．
+    \onslide<2->{
+        また，
+    \begin{itemize}
+        \item $U^+ :=$ $M$に接続していない$V^+$の頂点集合
+        \item $U^- :=$ $M$に接続していない$V^-$の頂点集合
+    \end{itemize}
+    とする．
+    }
+
+    \onslide<3->{
+    \begin{block}{}
+        増加道 $\longleftrightarrow$ $D_M$における$U^+$から$U^-$への有向パス
+    \end{block}
+    ∴ 幅優先探索により$O(m)$時間で増加道が求められる \\ \hfill {\footnotesize ($m = |E|$)}
+    }
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            mybipartitedi;
+            % matching
+            {[edges={mypath}] {1,2,3,4} <-> {b,e,d,f}; }
+        };
+        \begin{scope}[on background layer]
+        \onslide<2->{
+            \node[mysubset, fit=(5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(a), "$U^-$" right]{} ;
+            \node[mysubset, fit=(c), "$U^-$" right]{} ;
+        }
+        \end{scope}
+        \node[above=10pt of 1]{$V^+$};
+        \node[above=10pt of a]{$V^-$};
+        }
+        $D_M$
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{例}
+
+    \begin{columns}[T]
+    \begin{column}{.5\textwidth}
+        \centering
+        \vspace{5pt}
+
+        \tikz{
+        \graph[mygraph, grow right=5em]{mybipartite};
+            \onslide<3|handout:0>{\graph[edges={mypath}]{
+                (1) -- (b);
+            };}
+            \onslide<4|handout:0>{\graph[edges={mypath}]{
+                {(1),(2)} -- {(a),(b)};
+            };}
+            \onslide<5|handout:0>{\graph[edges={mypath}]{
+                {(1),(2),(3),(4)} -- {(a),(b),(f),(e)};
+            };}
+            \onslide<6>{\graph[edges={mypath}]{
+                {(1),(2),(3),(4),(5)} -- {(a),(b),(d),(e),(f)};
+            };}
+        } \\ $G$
+    \end{column}
+    \begin{column}{.5\textwidth}
+        \centering
+        \onslide<2->{
+        \tikz{
+            \graph[mygraph, grow right=5em]{mybipartitedi};
+            \onslide<3|handout:0>{\graph[edges={mypath}]{
+                (1) <-> (b);
+            };}
+            \onslide<4|handout:0>{\graph[edges={mypath}]{
+                {(1),(2)} <-> {(a),(b)};
+            };}
+            \onslide<5|handout:0>{\graph[edges={mypath}]{
+                {(1),(2),(3),(4)} <-> {(a),(b),(f),(e)};
+            };}
+            \onslide<6>{\graph[edges={mypath}]{
+                {(1),(2),(3),(4),(5)} <-> {(a),(b),(d),(e),(f)};
+            };}
+        \begin{scope}[on background layer]
+        \onslide<2|handout:0>{
+            \node[mysubset, fit=(1) (2) (3) (4) (5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(a) (b) (c) (d) (e) (f), "$U^-$" right]{} ;
+        }
+        \onslide<3|handout:0>{
+            \node[mysubset, fit=(2) (3) (4) (5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(a), "$U^-$" right]{} ;
+            \node[mysubset, fit=(c) (d) (e) (f), "$U^-$" right]{} ;
+        }
+        \onslide<4|handout:0>{
+            \node[mysubset, fit=(3) (4) (5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(c) (d) (e) (f), "$U^-$" right]{} ;
+        }
+        \onslide<5|handout:0>{
+            \node[mysubset, fit=(5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(c) (d), "$U^-$" right]{} ;
+        }
+        \onslide<6>{
+            \node[mysubset, fit=(6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(c), "$U^-$" right]{} ;
+        }
+        \end{scope}
+        } \\ $D_M$ 
+        }
+    \end{column}
+    \end{columns}
+    \hfill \onslide<6>{【終了】}
+\end{frame}
+
+\begin{frame}
+    \frametitle{K\H{o}nig--Egerv\'aryの定理再訪}
+
+    \postit{
+        \footnotesize
+    $\displaystyle
+            \max_{\text{$M$:マッチング}} |M| = \min_{\text{$(S,T)$: 頂点被覆}} |S| + |T|
+            $
+    }
+
+    \small
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \begin{theorem}
+        アルゴリズムが停止したときの$D_M$において，$U^+$から到達可能な頂点全体を$X$とする．このとき
+        \setlength{\abovedisplayskip}{5pt}
+        \setlength{\belowdisplayskip}{5pt}
+        \[  
+            S := V^+ \setminus X, \quad T := V^- \cap X
+        \]
+        とすると，$(S,T)$は最小頂点被覆．
+    \end{theorem}
+
+    \onslide<2->{
+    \structure{（証明）} 全ての枝は右向きに進めるので，$(S,T)$は定義から頂点被覆．
+    また，増加道が存在しないので，$X \cap U^- = \emptyset$.
+    ゆえに$(S,T)$の全ての頂点は$M$の枝を1本だけ被覆しているので，$|S|+|T|=|M|$.  \qed
+    }
+
+    \bigskip
+    \onslide<3->{K\H{o}nig--Egerv\'aryの定理の，LPを使わないアルゴリズム的証明が得られた．}
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            mybipartitedi;
+
+            % matching
+            {[edges={mypath}] {1,2,3,4,5} <-> {a,b,d,e,f}; }
+        };
+        \begin{scope}[on background layer]
+            % \node[mysubset, fit=(5) (6) (f), "$X$" right]{} ;
+            % \path[draw,AlertOrange,dotted,thick,fill=AlertOrange!10] ($(5.north west)+(-.3,.5)$) -- ($(6.south west)+(-.3,-.3)$) -- ($(f.south east)+(.3,-.3)$) -- ($(f.north east)+(.3,.3)$) -- cycle node[left]{$X$};
+            \path[draw,AlertOrange!10,fill=AlertOrange!10,line width=1.0cm, rounded corners] (5.north west) -- (6.south west) -- (f.south west) -- (f.north west) -- cycle node[AlertOrange,left]{$X$};
+            \node[mysubset, fit=(6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(c), "$U^-$" right]{} ;
+            \node[draw,UniPink,dotted,thick,fill=UniPink!10, fit=(1) (2) (3) (4), "$S$" left ]{} ;
+            \node[draw,UniPink,dotted,thick,fill=UniPink!10, fit=(f), "$T$" right]{} ;
+        \end{scope}
+        }
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{重みなし二部マッチング（まとめ）}
+
+    \begin{theorem}
+        二部グラフにおいて，
+        \begin{itemize}
+            \setlength{\itemsep}{1em}
+            \item 増加道アルゴリズムは最大マッチング$M$を$O(mn)$時間で求める． \hfill {\footnotesize ($m = |E|$, $n = |V|$)}
+
+            \item 同時に，$|M| = |S| + |T|$を満たす最小頂点被覆$(S,T)$も求められる．
+        \end{itemize}
+    \end{theorem}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{重み付き二部マッチング}
+\againframe<4|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+    \frametitle{重み付き二部（完全）マッチング}
+    \small
+
+    マッチング$M$が\alert{完全} $\defiff$ 全ての頂点が$M$に接続 $\iff$ $2|M| = |V|$
+
+    \begin{block}{重み付き二部完全マッチング問題}
+        \structure{入力} $G=(V; E)$: 二部グラフ($|V^+|=|V^-|=n/2$)，枝重み$w_e$ ($e \in E$) \\
+        \structure{出力} $w(M) := \sum_{e\in M}w_e$が最大の完全マッチング$M$
+    \end{block}
+    ※ 以下，$G$は少なくとも1つの完全マッチングを持つとする．
+    \pause
+
+    \begin{columns}[T]
+    \begin{column}{.45\textwidth}
+    \begin{primal}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{max} & \quad  \sum_{e \in E} w_e x_e \\
+            \text{s.t.} & \quad \sum_{e \in \delta(i)} x_e = 1  \quad (i \in V) \\
+            & \quad x \geq 0 
+        \end{alignat*}
+    \end{primal}
+    \end{column}
+    \begin{column}{.45\textwidth}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{min} & \quad  \sum_{i \in V} y_i =: y(V) \\
+            \text{s.t.} & \quad y_i + y_j \geq w_e \quad (e=ij \in E) 
+        \end{alignat*}
+    \end{dual}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{相補性条件}
+
+    \begin{columns}[T]
+    \begin{column}{.6\textwidth}
+        \begin{lemma}[相補性条件]
+        $M \subseteq E$, $y \in \R^V$が最適解 
+        $\iff$
+        \begin{enumerate}
+            \item $M$は完全マッチング
+            \item $y$は(D)の実行可能解
+            \item $y_i + y_j = w_e$ \quad ($e = ij \in M$)
+        \end{enumerate}
+        \end{lemma}
+        
+        \onslide<2->{
+        以下，
+                \begin{itemize}
+                    \item (D)の実行可能解を\alert{$w$被覆}
+                    \item ③を満たす枝を\alert{タイトな枝}
+                \end{itemize}
+                という．
+        }
+    \end{column}
+    \begin{column}{.35\textwidth}
+        \footnotesize
+        \begin{primal}
+        \begin{alignat*}{2}
+            \text{max} & \quad  \sum_{e \in E} w_e x_e \\
+            \text{s.t.} & \quad \sum_{e \in \delta(i)} x_e = 1  \quad (i \in V) \\
+            & \quad x \geq 0 
+        \end{alignat*}
+    \end{primal}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{min} & \quad  \sum_{i \in V} y_i =: y(V) \\
+            \text{s.t.} & \quad y_i + y_j \geq w_e \quad (e \in E) 
+        \end{alignat*}
+    \end{dual}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{ハンガリー法}
+
+    \small
+    ②③を満たすマッチング$M$と$w$被覆$y$を保持し，①を満たすまで更新するアルゴリズム．
+
+    \begin{definition}
+        $w$被覆$y$に対し，$G$の部分グラフ$G_y = (V^+, V^-, E_y)$を
+        \[
+            E_y = \{e = ij \in E : y_i + y_j = w_e \} 
+        \]
+        と定める．つまり，$G_y$は$y$に関しタイトな枝のみ残したグラフ．
+    \end{definition}
+
+    \begin{lemma}
+        $G_y$に\textbf{完全}マッチングが存在すれば，それは最大重みマッチング．
+    \end{lemma}
+    \structure{証明} 相補性条件！\qed
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{ハンガリー法}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    $G_y$に完全マッチングが存在しなかったら？\\
+    $\longrightarrow$ $y$を更新し，(D)の目的関数値を改善できる．
+    
+    \pause
+    \begin{lemma}
+        $D_M(y)$を$G_y$に対する重みなしマッチングで使う有向グラフとし，$D_M(y)$における$U^+$から到達可能な頂点全体を$X$とする．
+            $\eps := \min\{ y_i + y_j - w_e : e = ij \in E, i \in V^+ \cap X, j \in V^- \setminus X \}$ とする．
+            $y'$を
+            \setlength{\abovedisplayskip}{0pt}
+        \[ 
+        y'_i =
+        \begin{cases}
+            y_i - \eps & (i \in V^+ \cap X) \\
+            y_i + \eps & (i \in V^- \cap X) \\
+            y_i        & (\text{それ以外})
+        \end{cases}
+        \]
+    とすると，$y'$は$w$被覆で，$y'(V) < y(V)$を満たす．
+            % \item $\eps = +\infty$ $\implies$ 完全マッチングは存在しない．
+    \end{lemma}
+    \end{column}
+    \begin{column}{.3\textwidth}
+    \tikz{\graph[mygraph,simple,grow right=5em, branch down=3em]{
+        {[edges=gray!20] mybipartite2;};
+    1 -> b, 2 -> {a,b}, 3 -> a;
+    {[edges=mypath] {(1),(2)} <-> {(b),(a)}};
+    };
+    \foreach \y\i in {4/1,2/2,3/3}
+        \node[UniGreen,left=1pt of \i]{$\y$};
+    \foreach \y\i in {2/a,0/b,0/c}
+        \node[UniGreen,right=1pt of \i]{$\y$};
+    \begin{scope}[on background layer]
+        \path[draw,AlertOrange!10,fill=AlertOrange!10,line width=1.0cm, rounded corners, visible on=<.->] (1.north west) -- (3.south west) -- (b.south east) -- (a.north east) -- cycle node[AlertOrange,left]{$X$};
+    \end{scope}
+        \foreach \i in {1,2,3}
+            \node[UniGreen,above] at (\i) {$-\eps$};
+        \foreach \i in {a,b}
+            \node[UniGreen,above] at (\i) {$+\eps$};
+    } 
+    \end{column}
+    \end{columns}
+    % $\longrightarrow$ $G_y$の最小頂点被覆$(S, T)$は$|S| + |T| < n/2$を満たす．
+    
+    % \pause
+    % \bigskip
+
+    % \pause
+    % \bigskip
+    % と，$|V^+ \setminus X| + |V^- \cap X| < n/2 \iff |V^+ \cap X| - |V^- \cap X| > 0$.
+   
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{補題の証明}
+    \postit{
+        \footnotesize
+        $\eps := \min\{ y_i + y_j - w_e : e = ij \in E, i \in V^+ \cap X, j \in V^- \setminus X \}$ \\
+        \footnotesize
+            $
+        y'_i =
+        \begin{cases}
+            y_i - \eps & (i \in V^+ \cap X) \\
+            y_i + \eps & (i \in V^- \cap X) \\
+            y_i        & (\text{それ以外})
+        \end{cases}
+        $
+    }
+
+    \small
+    % \structure{Claim} 枝$e = ij \in E$ ($i \in V^+ \cap X$, $j \in V^- \setminus X$)はタイトではない．
+    
+    \structure{$y'$が$w$被覆であること}
+    \begin{itemize}
+        \item 制約$y_i + y_j \geq w_e$ ($e = ij \in E$)が更新後に破られる可能性があるのは，$i \in V^+ \cap X$, $j \in V^- \setminus X$の場合のみ．
+        \item $\eps$の定義より実行可能性は保たれる．
+    \end{itemize}
+
+    \bigskip\pause
+    \structure{$y'(V) < y(V)$であること}
+    \begin{itemize}
+        \item $y'(V) = y(V) - \eps(|V^+ \cap X| - |V^- \cap X|)$．
+        
+        \item いま，$G_y$に完全マッチングが存在しないので，$|V^+ \setminus X| + |V^- \cap X| < n/2$. \\
+        $\longrightarrow |V^+ \cap X| - |V^- \cap X| > 0$.
+        
+        \item よって，$\eps > 0$を示せば良い．$X$は$G_y$の到達可能集合なので，任意の枝$e = ij \in E$ s.t. $i \in V^+ \cap X$, $j \in V^- \setminus X$ はタイトでない．
+        ゆえに$y_i + y_j - w_e > 0$が成り立つ． \qed
+    \end{itemize}
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{ハンガリー法}
+    
+    \small
+    \begin{block}{}
+        \begin{algorithmic}[1]
+            \STATE $y_i := \max_{e \in \delta(i)} w_e$ ($i \in V^+$), $y_j := 0$ ($j \in V^-$)とする．
+            \COMMENT{$y$は自明な$w$被覆}
+            \WHILE{\textbf{True}}
+                \STATE $G_y$の（重みなし）最大マッチング$M$を求める． 
+                \COMMENT{$O(mn)$時間}
+                \IF{$M$が完全マッチング}
+                    \RETURN $M$ 
+                    \COMMENT{相補性条件より，$M$は最大重みマッチング}
+                \ELSE[{$w$被覆$y$を更新}]
+                    \STATE $X$を$D_M(y)$における$U^+$から到達可能な頂点全体とする．
+                    \STATE $\eps := \min\{ y_i + y_j - w_{ij} : i \in V^+ \cap X, j \in V^- \setminus X \}$
+                    \STATE $y_i \gets y_i - \eps$ ($i \in V^+ \cap X$), $y_j \gets y_j + \eps$ ($j \in V^- \cap X$)
+                \ENDIF
+            \ENDWHILE
+        \end{algorithmic} 
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{例} 
+    \small
+    \begin{columns}
+    \begin{column}{.20\textwidth}<+->
+        \centering
+        \tikz{\graph[mygraph,grow right=5em, branch down=3em]{mybipartite2; 
+            1 --["{$5$}" above] a;
+            1 --["{$4$}" {above, pos=.3}] b;
+            2 --["{$4$}" {above, pos=.1}] a;
+            2 --["{$2$}" {below, pos=.9}] b;
+            2 --["{$1$}" {above, pos=.99}] c;
+            3 --["{$5$}" {above, pos=.02}] a;
+            3 --["{$2$}" below] c;
+        };}
+        \\ $G$
+    \end{column}
+    \begin{column}{.25\textwidth}<+->
+        \centering
+        \tikz{\graph[mygraph,simple,grow right=5em, branch down=3em]{ 
+        {[edges=gray!20]
+            mybipartite2;
+        };
+        {1,2,3} -> a;
+        };
+        \foreach \y\i in {5/1,4/2,5/3}
+            \node[UniGreen,left=1pt of \i]{$\y$};
+        \foreach \y\i in {0/a,0/b,0/c}
+            \node[UniGreen,right=1pt of \i]{$\y$};
+        \onslide<+->{\graph[edges=mypath]{(1) <-> (a)};}
+        \begin{scope}[on background layer]
+            \path[draw,AlertOrange!10,fill=AlertOrange!10,line width=1.0cm, rounded corners,visible on=<+->] (1.north west) -- (3.south west) -- (a.south east) -- (a.north east) -- cycle node[AlertOrange,left]{$X$};
+        \end{scope}
+        \onslide<+->{
+            \foreach \i in {1,2,3}
+                \node[UniGreen,above] at (\i) {$-\eps$};
+            \node[UniGreen,above] at (a) {$+\eps$};
+        }
+        } $y(V)=14$, \onslide<.->{$\eps=1$}
+    \end{column}
+    \begin{column}{.25\textwidth}<+->
+        \centering
+        \tikz{\graph[mygraph,simple,grow right=5em, branch down=3em]{
+            {[edges=gray!20] mybipartite2;};
+        1 -> {a,b}, 2 -> a; 3 -> a;
+        };
+        \onslide<.>{
+            \graph[edges=mypath]{(1) <-> (a);};
+        }
+        \foreach \y\i in {4/1,3/2,4/3}
+            \node[UniGreen,left=1pt of \i]{$\y$};
+        \foreach \y\i in {1/a,0/b,0/c}
+            \node[UniGreen,right=1pt of \i]{$\y$};
+        \onslide<+->{
+        \graph[edges=mypath]{{(1),(2)} <-> {(b),(a)}};
+        \begin{scope}[on background layer]
+            \path[draw,AlertOrange!10,fill=AlertOrange!10,line width=1.0cm, rounded corners,visible on=<.->] (2.north west) -- (3.south west) -- (a.south east) -- (a.north east) -- cycle node[AlertOrange,left]{$X$};
+        \end{scope}
+            \foreach \i in {2,3}
+                \node[UniGreen,above] at (\i) {$-\eps$};
+            \node[UniGreen,above] at (a) {$+\eps$};
+        }
+        } $y(V)=12$, \onslide<.->{$\eps=1$}
+    \end{column}
+    \begin{column}{.25\textwidth}<+->
+        \centering
+        \tikz{\graph[mygraph,simple,grow right=5em, branch down=3em]{
+            {[edges=gray!20] mybipartite2;};
+        1 -> b, 2 -> {a,b}, 3 -> a;
+        {[edges=mypath] {(1),(2)} <-> {(b),(a)}};
+        };
+        \foreach \y\i in {4/1,2/2,3/3}
+            \node[UniGreen,left=1pt of \i]{$\y$};
+        \foreach \y\i in {2/a,0/b,0/c}
+            \node[UniGreen,right=1pt of \i]{$\y$};
+        \onslide<+->{
+        \begin{scope}[on background layer]
+            \path[draw,AlertOrange!10,fill=AlertOrange!10,line width=1.0cm, rounded corners, visible on=<.->] (1.north west) -- (3.south west) -- (b.south east) -- (a.north east) -- cycle node[AlertOrange,left]{$X$};
+        \end{scope}
+            \foreach \i in {1,2,3}
+                \node[UniGreen,above] at (\i) {$-\eps$};
+            \foreach \i in {a,b}
+                \node[UniGreen,above] at (\i) {$+\eps$};
+        }
+        } $y(V) = 11$, \onslide<.->{$\eps=1$}
+    \end{column}
+    \end{columns}
+
+    \begin{columns}
+    \begin{column}{.35\textwidth}<+->
+        \tikz{\graph[mygraph,simple,grow right=5em, branch down=3em]{
+            {[edges=gray!20] mybipartite2;};
+        1 -> b, 2 -> {a,b,c}, 3 -> {a,c};
+        {[edges=mypath] {1,2} <-> {b,a};};
+        };
+        \foreach \y\i in {3/1,1/2,2/3}
+            \node[UniGreen,left=1pt of \i]{$\y$};
+        \foreach \y\i in {3/a,1/b,0/c}
+            \node[UniGreen,right=1pt of \i]{$\y$};
+        \onslide<+->{
+        \graph[edges=mypath]{{(1),(2),(3)} <-> {(b),(a),(c)}};
+        }
+        } $y(V) = 10$\onslide<.->{ $=w(M)$ 【終了】}
+    \end{column}
+    \begin{column}{.65\textwidth}
+    
+    \end{column}
+    \end{columns}
+    
+
+\end{frame}
+
+\begin{frame}{ハンガリー法の解析}
+
+    \small
+    \begin{theorem}
+        ハンガリー法は$O(mn^3)$時間で最大重み完全マッチングと最小$w$被覆を求める．
+        \hfill {\footnotesize ($m = |E|$, $n = |V|$)}
+    \end{theorem}
+
+    \pause
+    \begin{itemize}[<+->]
+        \item アルゴリズムの実行中に$|M|$は減らない．
+        \begin{itemize}
+            \item ($\because$) $y$が更新されて$y'$になったとき，$G_y$の最大マッチング$M$は$G_{y'}$でもマッチング．
+        \end{itemize}
+        $\longrightarrow$ $M$は高々$n/2$回更新される．
+
+        \item また，$|M|$が増えず$y$だけが更新されるとき，$\eps$の定義のminを達成する枝により，到達可能集合$X$が真に拡大する．\\
+        $\longrightarrow$ 高々$n$回の$y$の更新後に，$|M|$は増える．
+
+        \item ∴全体では$O(n^2)$回の反復．
+    \end{itemize}
+
+    \vfill
+    \onslide<4->
+\end{frame}
+
+\end{document}
