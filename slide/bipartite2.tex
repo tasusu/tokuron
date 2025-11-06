@@ -1,0 +1,694 @@
+\RequirePackage{plautopatch}
+\documentclass[14pt,aspectratio=169,xcolor=dvipsnames,table,onlytextwidth,dvipdfmx]{beamer}
+\input{macros_ja}
+\csname endofdump\endcsname
+\title{組合せ最適化特論}
+\subtitle{第3回（二部マッチング②）}
+\author{担当: \textbf{相馬 輔}}
+\date{2025/11/6}
+
+\begin{document}
+\maketitle
+
+\input{flowchart}
+
+\begin{frame}<1>[label=outline]{目次}
+\begin{tikzpicture}
+    \tikzstyle{block} = [rectangle, text width=\textwidth, rounded corners, minimum height=4em]
+    \tikzstyle{line} = [draw, -latex]
+
+    \node[block,alt={<1,3->{fill=cyan!10}{fill=red!10}}] (combopt) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{1. 最短路問題}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 定義\\
+                \structure{・} 負閉路とポテンシャル
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-2,4->{fill=cyan!10}{fill=red!10}}, below=.5em of combopt] (LP) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{2. 逐次最短路法と主双対法}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 逐次最短路法 \\
+                \structure{・} 主双対法
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-3,5->{fill=cyan!10}{fill=red!10}}, below=.5em of LP] (TU) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{3. 最適性条件からの見方}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} ポテンシャル最適性条件 \\
+                \structure{・} 閉路最適性条件 \\
+                \structure{・} アルゴリズム再訪
+            \end{column}
+        \end{columns}
+    };
+\end{tikzpicture}%
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{最短路問題}
+\againframe<2|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{最短路問題}
+     $G = (V, A)$: 有向グラフ, $s, t \in V$, $\ell: A \to \R$: 枝長
+
+     \bigskip
+     $P$: $s$--$t$路（$s$から$t$へ行く経路で，同じ頂点を複数回通っても良い） に対し，
+     \[
+        \ell(P) := \sum_{e \in E(P)} \ell(e)
+     \]
+     を$P$の長さとする．
+     
+     \bigskip
+     \begin{block}{最短路問題}
+        $s$--$t$路$P$のうち，長さ$\ell(P)$最小のものを求めよ．
+     \end{block} 
+\end{frame}
+
+\begin{frame}{最短路問題と負閉路}
+    $s$を固定する．任意の$t$に対して，最短路は存在するか？
+
+    % \bigskip
+    % \structure{存在しない場合:}
+    % \begin{itemize}
+    %     \item $s$から到達不可能な$t$が存在する場合
+    %     \item 
+    % \end{itemize}
+   
+    \bigskip
+    \begin{lemma}
+        $G$の任意の頂点は$s$から到達可能であるとする．このとき，以下は同値:  
+        \begin{itemize}
+            \item 任意の$t$に対し$s$--$t$最短路が存在 
+            \item 有向閉路$C$で$\ell(C) < 0$なるもの（\alert{負閉路}）は存在しない．
+        \end{itemize}
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{ポテンシャル}
+    \begin{definition}[ポテンシャル]
+        $p: V \to \R$が枝長$\ell$に関する\alert{（実行可能）ポテンシャル} \\ 
+        $\defiff$ $p(j) - p(i) \leq \ell(a)$ \quad ($a = ij \in A$)
+    \end{definition}
+
+    \begin{lemma}
+        $G$の任意の頂点は$s$から到達可能とする．このとき，以下は同値: 
+        \begin{enumerate}
+            \item 任意の$t$に対し$s$--$t$最短路が存在
+            \item ポテンシャル$p: V \to \R$が存在
+            \item 負閉路が存在しない
+        \end{enumerate}
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{ポテンシャル}
+    \small
+    \postit{
+        \footnotesize
+        \begin{minipage}{.42\textwidth}
+        \begin{enumerate}
+            \item 任意の$t$に対し$s$--$t$最短路が存在
+            \item ポテンシャル$p: V \to \R$が存在
+            \item 負閉路が存在しない
+        \end{enumerate}
+        \end{minipage}
+    }
+
+    \bigskip
+    \structure{(証明)} 
+
+    \textbf{①$\implies$②:} $p(t) :=$ ($s$--$t$最短路長)とおく．任意の枝$a = ij \in A$
+    に対し，図より
+    \[ p(j) \leq p(i) + \ell(a). \]
+
+    \bigskip\pause
+    \textbf{②$\implies$③:} 任意の有向閉路$C: v_0;v_1;\dots;v_k = v_0$に対して，
+    \[ 
+        \ell(C) = \sum_{i=1}^k \ell(v_{i-1}v_i) \geq \sum_{i=1}^k (p(v_i) - p(v_{i-1})) = 0. 
+    \]
+
+    \bigskip\pause
+    \textbf{③$\implies$①:} すでにやった． \qed
+\end{frame}
+
+\begin{frame}{最短路問題のアルゴリズム}
+    単一の始点$s$に対して，全ての$t$に関する最短路問題を同時に解くアルゴリズムが知られている:  
+
+    \bigskip
+    \begin{description}
+        \setlength{\itemsep}{1em}
+        \item[一般の枝長$\ell$:] \alert{Bellman--Ford法} $O(mn)$時間  {\hfill \footnotesize ※負閉路がある場合は検出も可能}
+        \item[非負の枝長$\ell$:] \alert{Dijkstra法} $O(m + n \log n)$時間
+    \end{description}
+    {\footnotesize\hfill ($n = |V|, m = |E|$)}
+
+    \bigskip
+    これらは，$s$--$t$最短路だけでなく，実行可能ポテンシャル(=最短路長)も同時に求める．
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{逐次最短路法と主双対法}
+\againframe<3|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[label=w-bipartite]
+    \frametitle{重み付き二部マッチング}
+
+    \begin{block}{重み付き二部マッチング問題}
+        \structure{入力} $G=(V; E)$: 二部グラフ，枝重み$w_e$ ($e \in E$) \\
+        \structure{出力} $w(M) := \sum_{e\in M}w_e$が\textbf{最小}のマッチング$M$
+    \end{block}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{補助ネットワーク（復習）}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    マッチング$M$に対し，$G$の枝を
+    \begin{itemize}
+        \item $M$の枝は両向き，
+        \item $E\setminus M$の枝は$V^+$から$V^-$向き
+    \end{itemize}
+    に向き付けた有向グラフを$D_M$とする．
+    \onslide<2->{
+        また，
+    \begin{itemize}
+        \item $U^+ :=$ $M$に接続していない$V^+$の頂点集合
+        \item $U^- :=$ $M$に接続していない$V^-$の頂点集合
+    \end{itemize}
+    とする．
+    }
+
+    \onslide<3->{
+    \begin{block}{}
+        増加道 $\longleftrightarrow$ $D_M$における$U^+$から$U^-$への有向パス
+    \end{block}
+    ∴ 幅優先探索により$O(m)$時間で増加道が求められる \\ \hfill {\footnotesize ($m = |E|$)}
+    }
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            mybipartitedi;
+            % matching
+            {[edges={mypath}] {1,2,3,4} <-> {b,e,d,f}; }
+        };
+        \begin{scope}[on background layer]
+        \onslide<2->{
+            \node[mysubset, fit=(5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(a), "$U^-$" right]{} ;
+            \node[mysubset, fit=(c), "$U^-$" right]{} ;
+        }
+        \end{scope}
+        \node[above=10pt of 1]{$V^+$};
+        \node[above=10pt of a]{$V^-$};
+        }
+        $D_M$
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{逐次最短路法}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    マッチング$M$に対し，$D_M$の枝長$\ell_M$を
+    \[
+        \ell_M(a) := \begin{cases}
+            \phantom{-}w(e)  & (a=\text{$V^+$から$V^-$向きの$e \in E$}) \\
+            -w(e) & (a = \text{$V^-$から$V^+$向きの$e \in E$})
+        \end{cases}
+    \]
+    と定める．
+
+    \bigskip
+    \onslide<2->{
+    \structure{\coloremoji{🤔}（なぜこう定めるのか？）}
+
+    交互道 or 交互サイクル$P$に関して反転操作を行った後のマッチング$M \triangle P$の重みが
+    \begin{block}{}
+    \[
+        w(M \triangle P) = w(M) + \ell_M(P)
+    \]
+    \end{block}
+    と書けて便利なので．
+    }
+    
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            mybipartitedi;
+            % matching
+            {[edges={mypath}] {1,2,3,4} <-> {b,e,d,f}; }
+        };
+        \begin{scope}[on background layer]
+            \node[mysubset, fit=(5) (6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(a), "$U^-$" right]{} ;
+            \node[mysubset, fit=(c), "$U^-$" right]{} ;
+        \end{scope}
+        \node[above=10pt of 1]{$V^+$};
+        \node[above=10pt of a]{$V^-$};
+        }
+        $D_M$
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{逐次最短路法}
+    \small
+    \highlight[UniBlue]{$w(M \triangle P) = w(M) + \ell_M(P)$}より，$\ell_M(P)$最小の増加道$P$を選ぶのが良さそう
+
+    \begin{block}{逐次最短路法}
+        \begin{algorithmic}[1]
+            \STATE $M \gets \emptyset$ \COMMENT{初期マッチング}
+            \WHILE{$M$に対する増加道が存在する}
+                \STATE 補助ネットワーク$(D_M, \ell_M)$上で$U^+$--$U^-$最短路$P$を求める \\ \COMMENT{Bellman--Ford法で$O(mn)$時間}
+                \STATE $M \gets M \triangle P$ \COMMENT{マッチング更新}
+            \ENDWHILE
+        \end{algorithmic}
+    \end{block}
+        {\footnotesize $M \triangle P$: $M$と$P$の対称差（$P$に沿って$M$の枝を反転）}
+
+        \pause
+        \bigskip
+        \begin{theorem}
+            逐次最短路法で求まるマッチングを$\emptyset = M_0, M_1, \cdots,M_{\mu}$とする．このとき，各$k=0, 1, \dots, \mu$に対し，$M_k$は大きさ$k$のマッチングのうち重み最小である．また，大きさ$\mu+1$以上のマッチングは存在しない．
+        \end{theorem}
+\end{frame}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    \small
+    \begin{theorem}
+        逐次最短路法で求まるマッチングを$\emptyset = M_0, M_1, \cdots,M_{\mu}$とする．このとき，各$k=0, 1, \dots, \mu$に対し，$M_k$は大きさ$k$のマッチングのうち重み最小である．
+    \end{theorem}
+
+\structure{(証明)} $k$に関する帰納法．$k=0$は自明． 
+
+$M$が大きさ$k$の最小重みマッチングで，少なくとも1つ増加道をもつと仮定する．
+
+\bigskip
+\onslide<+->
+\structure{Claim.} $(D_M, \ell_M)$は$U^+$--$U^-$最短路をもつ \\
+\only<+>{{\footnotesize \structure{(∵)} 負閉路が存在しないことを示せば良い．負閉路$C$が存在したと仮定する．$C$は交互サイクルであるとしてよい．すると，$M \triangle C$は大きさ$k$のマッチングで，
+\[ w(M \triangle C) = w(M) + \ell_M(C) < w(M) \]となり，矛盾．\qed}}
+
+\bigskip
+\onslide<+->
+$P$を$U^+$--$U^-$最短路とし，$M^+ := M \triangle P$を更新後のマッチングとする．
+
+\bigskip
+\structure{Claim.} 任意の大きさ$k+1$のマッチング$N$に対し，$w(M^+) \leq w(N)$
+\end{frame}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    \small
+    {\footnotesize 
+    \postit{$M$: 大きさ$k$の最小重みマッチング \\ 
+    $P =$ $(D_M, \ell_M)$上の$U^+$--$U^-$最短路 \\ 
+    $M^+ := M \triangle P$: 更新後のマッチング}
+    }
+\newcommand{\M}{{\textcolor{AlertOrange}{M}}}
+\newcommand{\Mp}{{\textcolor{AlertOrange}{M^+}}}
+\newcommand{\N}{{\textcolor{UniGreen}{N}}}
+
+\structure{Claim.} 任意の大きさ$k+1$のマッチング$\N$に対し，$w(\Mp) \leq w(\N)$
+
+\bigskip
+\structure{(∵)} $\M$と$\N$の対称差$\M \triangle \N$は，交互道と偶サイクルからなる．いま，$|\M| < |\N|$より，この中に$\M$増加道$Q$が存在する．
+
+\begin{center}
+    \tikz[baseline=(2.base)]{\graph[mygraph,clockwise]{subgraph I_n[n=4, radius=.7cm]; 
+        {[edges={mypath }] 1 -- 2; 3 -- 4; };
+        {[edges={mypath2}] 2 -- 3; 4 -- 1; };
+    }}
+    \quad
+    \begin{tabular}{c}
+    \tikz{\graph[mygraph]{
+        1 --[mypath] 2 --[mypath2] 3 --[mypath] 4 --[mypath2] 5;
+    }} \\
+    \tikz{\graph[mygraph]{
+        1 --[mypath] 2 --[mypath2] 3 --[mypath] 4;
+    }} \\
+    \tikz{\graph[mygraph]{
+        1 --[mypath2] 2 --[mypath] 3 --[mypath2] 4 --[mypath] 5 --[mypath2] 6;
+    }} $Q$
+    \end{tabular}
+\end{center}
+\pause
+$P$は最短路なので，$\ell_\M(P) \leq \ell_\M(Q)$.
+
+\bigskip
+また，$\N \triangle Q$は大きさ$k$のマッチングなので，
+\[
+   w(\M) \leq w(\N \triangle Q) = w(\N) - \ell_\M(Q).
+\]
+これらより，
+\[
+    w(\Mp) = w(\M) + \ell_\M(P) \leq w(\N) - \ell_\M(Q) + \ell_\M(P) \leq w(\N). \qed
+\]
+\end{frame}
+
+\begin{frame}{逐次最短路法の計算量}
+
+    \structure{計算量解析}
+    \begin{itemize}
+        \item $M$の更新は$\mu$回 
+        {\footnotesize \hfill ($\mu =$ 最大マッチングの大きさ)}
+        \item 各更新は1回の$(D_M, \ell_M)$上の最短路問題 \\
+        \hfill $\longrightarrow$ Bellman--Ford法で$O(mn)$時間
+    \end{itemize}
+    {\footnotesize \hfill ($n = |V|, m = |E|$)}
+    
+    \begin{theorem}[伊理~(1960)]
+        逐次最短路法は，$O(mn\mu)$時間で，$k=0,1,\dots,\mu$に対する大きさ$k$の最小重みマッチング$M_k$を求める．
+    \end{theorem}
+
+    \bigskip
+    Cf. ハンガリー法 $O(mn^3)$時間
+\end{frame}
+
+\begin{frame}{主双対法}
+    \small
+    マッチング$M$とポテンシャル$p$の両方を保持することで，逐次最短路法の計算量を改善できる．
+
+    \begin{definition}[簡約枝長]
+        枝長$\ell: A \to \R$のポテンシャル$p: V \to \R$に関する\alert{簡約枝長}$\ell_p: A \to \R$を次のように定める:
+        \begin{align*}
+       \ell_p(a) := \ell(a) + p(i) - p(j) \quad (a = ij \in A) 
+        \end{align*}
+    \end{definition}
+
+    \bigskip
+    \structure{観察}
+    \begin{itemize}
+        \item 
+    任意の$s$--$t$路$P$に対し，
+    \[
+        \ell_p(P) = \ell(P) + p(s) - p(t).
+    \]
+    特に，$\ell_p$に関する$s$--$t$最短路 $\iff$ $\ell$に関する$s$--$t$最短路．
+        \item $\ell_p \geq 0$ \dotfill\alert{Bellman-Ford法ではなくDijkstra法が使える！}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{主双対法}
+    
+    \small
+    \begin{block}{主双対法}
+        \begin{algorithmic}[1]
+            \STATE $M := \emptyset$ \COMMENT{初期マッチング}
+            \STATE $p(i) := 0$ ($i \in V^+$), $p(j) := \min_{i \in \delta(i)} w(ij)$ ($j \in V^-$) \COMMENT{初期ポテンシャル}
+            \WHILE{$M$に対する増加道が存在する}
+                \STATE 簡約枝長$\ell_{M,p}$に関する$D_M$上の$U^+$--$U^-$最短路$P$と最短路長関数$d$を求める． 
+                \COMMENT{Dijkstra法で$O(m + n\log n)$時間}
+                \STATE $M \gets M \triangle P$, $p \gets p + d$ \COMMENT{マッチングとポテンシャル更新}
+            \ENDWHILE
+        \end{algorithmic} 
+    \end{block}
+
+    \vfill
+    \begin{theorem}[Edmonds--Karp~(1970), 冨澤~(1971)]
+        主双対法で求まるマッチングを$\emptyset = M_0, M_1, \cdots,M_{\mu}$とする（$\mu =$最大マッチングの大きさ）．このとき，各$k=0, 1, \dots, \mu$に対し，$M_k$は大きさ$k$のマッチングのうち重み最小である．また，全体の計算量は$O((m + n \log n)\mu)$時間．
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{主双対法の証明}
+    \small
+    次の補題を示せば，あとは逐次最短路法の定理から従う．
+    
+    \begin{lemma}
+    主双対法における$p$は，常に$(D_M, \ell_M)$上のポテンシャル．
+    \end{lemma}
+    \pause
+    \structure{(証明)} 
+    $p^+ := p + d$とする．{\footnotesize ($d: V \to \R$ ... $(D_M, \ell_{M,p})$上の（$U^+$からの）最短路長関数)}
+
+    \bigskip
+    $d$は$(D_M, \ell_{M,p})$のポテンシャルなので，任意の枝$a = ij$に対し，
+    \begin{align*}
+        d(j) - d(i) \leq \ell_{M,p}(a) = \ell_M(a) + p(i) - p(j)
+    \end{align*}
+    が成り立つ．移項すると $p^+(j) - p^+(i) \leq \ell_M(a)$ となり，$p^+$は$(D_M, \ell_M)$のポテンシャルである．
+
+    \pause
+    \bigskip
+    次に，$M \gets M \triangle P$と更新した後も$p^+$がポテンシャルであることを示す．
+    最短路$P$上の枝$a = ij$では，上の不等式で等号が成立:
+    \begin{align*}
+        d(j) - d(i) = \ell_{M,p}(a) \quad \iff \quad p^+(j) - p^+(i) = \ell_M(a)
+    \end{align*}
+    よって，$P$の枝を反転しても，$p^+$がポテンシャルであることは保たれる． \qed
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{最適性条件からの見方}
+\againframe<4|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{最適性条件からの見方}
+    ハンガリー法，逐次最短路法，主双対法は，どれも\textbf{“同じアルゴリズム”の異なる姿}と思える．
+
+    \bigskip\pause
+    以下，最小重み\textbf{完全}マッチングを考えよう．
+
+    \vfill
+    \small
+    マッチング$M$が\alert{完全} $\defiff$ 全ての頂点が$M$に接続 $\iff$ $2|M| = |V|$
+
+    \begin{block}{重み付き二部完全マッチング問題}
+        \structure{入力} $G=(V; E)$: 二部グラフ($|V^+|=|V^-|=n/2$)，枝重み$w_e$ ($e \in E$) \\
+        \structure{出力} $w(M) := \sum_{e\in M}w_e$が最小の完全マッチング$M$
+    \end{block}
+    ※ 以下，$G$は少なくとも1つの完全マッチングを持つとする．
+\end{frame}
+
+\begin{frame}{双対変数とポテンシャル}
+    \small
+    \begin{columns}[T]
+    \begin{column}{.45\textwidth}
+    \begin{primal}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{min} & \quad  \sum_{e \in E} w_e x_e \\
+            \text{s.t.} & \quad \sum_{e \in \delta(i)} x_e = 1  \quad (i \in V) \\
+            & \quad x \geq 0 
+        \end{alignat*}
+    \end{primal}
+    \end{column}
+    \begin{column}{.45\textwidth}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{max} & \quad  \sum_{i \in V} y_i =: y(V) \\
+            \text{s.t.} & \quad y_i + y_j \leq w_e \quad (e=ij \in E) 
+        \end{alignat*}
+    \end{dual}
+    \centering
+    \begin{block}{}
+        \centering
+    双対変数$y \in \R^V$ s.t. \\ $y_i + y_j \leq w_e$ ($e = ij \in E$) 
+    \end{block}
+    $\updownarrow$ \\
+    \begin{alertblock}{}
+        \centering
+    ポテンシャル$p: V \to \R$ s.t. \\ $p(j) - p(i) \leq w_e$ ($e = ij \in E$) 
+    \end{alertblock}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{最適性条件のポテンシャルを用いた書き換え}
+    
+    \begin{columns}[T]
+    \begin{column}{.6\textwidth}
+        \begin{block}{最適性条件 (復習)}
+        $M \subseteq E$, $y \in \R^V$が最適解 
+        $\iff$
+        \begin{enumerate}
+            \item $M$は完全マッチング
+            \item $y$は(D)の実行可能解
+            \item $y_i + y_j = w_e$ \quad ($e = ij \in M$)
+        \end{enumerate}
+        \end{block}
+
+        \begin{alertblock}{補題}
+            $M\subseteq E$, $p: V \to \R$が最適解
+            $\iff$
+            \begin{enumerate}
+                \item $M$は完全マッチング
+                \item $p$は$(D_M, \ell_M)$のポテンシャル
+            \end{enumerate}
+        \end{alertblock}
+    \end{column}
+    \begin{column}{.35\textwidth}
+        \footnotesize
+        \begin{primal}
+        \begin{alignat*}{2}
+            \text{min} & \quad  \sum_{e \in E} w_e x_e \\
+            \text{s.t.} & \quad \sum_{e \in \delta(i)} x_e = 1  \quad (i \in V) \\
+            & \quad x \geq 0 
+        \end{alignat*}
+    \end{primal}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{max} & \quad  \sum_{i \in V} y_i =: y(V) \\
+            \text{s.t.} & \quad y_i + y_j \leq w_e \quad (e \in E) 
+        \end{alignat*}
+    \end{dual}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{最適性条件のポテンシャルを用いた書き換え}
+    \small
+    \begin{columns}[T]
+    \begin{column}{.48\textwidth}
+        \begin{block}{最適性条件 (復習)}
+        $M \subseteq E$, $y \in \R^V$が最適解 
+        $\iff$
+        \begin{enumerate}
+            \setlength{\itemsep}{-0.3em}
+            \item $M$は完全マッチング
+            \item $y$は(D)の実行可能解
+            \item $y_i + y_j = w_e$ \quad ($e = ij \in M$)
+        \end{enumerate}
+        \end{block}
+    \end{column}
+    \begin{column}{.48\textwidth}
+        \begin{alertblock}{補題}
+            $M\subseteq E$, $p: V \to \R$が最適解
+            $\iff$
+            \begin{enumerate}
+                \setlength{\itemsep}{-0.3em}
+                \item $M$は完全マッチング
+                \item $p$は$(D_M, \ell_M)$のポテンシャル
+            \end{enumerate}
+        \end{alertblock}
+    \end{column}
+    \end{columns}
+
+    \bigskip
+    \structure{(証明)}
+    $D_M$においては，$M$の枝は両向きであることに注意する．
+    $p$がポテンシャルならば，$e = ij \in M$に対し，
+    \begin{align*}
+        p(j) - p(i) & \leq \ell_M(\overrightarrow{e}) = w_e \\
+        p(i) - p(j) & \leq \ell_M(\overleftarrow{e}) = -w_e 
+    \end{align*}
+    が成り立つので，対応する$y$は\structure{③}を満たす．逆も同様．\qed
+\end{frame}
+
+\begin{frame}{ポテンシャル最適性条件・閉路最適性条件}
+    \begin{lemma}
+        完全マッチング$M$に対し，以下は同値:
+        \begin{enumerate}
+            \item $M$は最小重み完全マッチング
+            \item $(D_M, \ell_M)$のポテンシャル$p$が存在
+            \item $(D_M, \ell_M)$に負閉路は存在しない
+        \end{enumerate}
+    \end{lemma}
+
+    \small
+    \bigskip
+    \structure{(証明)} \\
+    \textbf{①$\iff$②:} $M$が最適 $\iff$ $\exists p$ s.t. $(M, p)$は相補性条件を満たす \\
+    \textbf{②$\iff$③:} 最短路問題のところでやった． \qed
+\end{frame}
+
+
+\begin{frame}{ハンガリー法（ポテンシャル版）}
+    \small
+    \begin{block}{ハンガリー法}
+        \begin{algorithmic}[1]
+            \STATE $p(i) := 0$ ($i \in V^+$), $p(j) := \min_{e \in \delta(j)} w_e$ ($j \in V^-$)とする．
+            \COMMENT{$p$は初期ポテンシャル}
+            \WHILE{\textbf{True}}
+                \onslide<1>{\STATE $G_p$の（重みなし）最大マッチング$M$を求める． \COMMENT{$O(mn)$時間}} %
+                \IF{\alt<1>{$M$が完全マッチング}{$G_p$が完全マッチング(say $M$)をもつ}}
+                    \RETURN $M$ 
+                    \COMMENT{相補性条件より，$M$は最小重みマッチング}
+                \ELSE[{ポテンシャル$p$を更新}]
+                    \STATE \alt<1>{$X$を$D_M(p)$における$U^+$から到達可能な頂点全体とする．}{$G_p$の最小頂点被覆$(S,T)$を求める \COMMENT{$|S|+|T| < n$}}
+                    \STATE \alt<1>{$\eps := \min\{ w_{e} + p(i) - p(j) : e = ij, i \in V^+ \cap X, j \in V^- \setminus X \}$}{$\eps := \min\{ w_{e} + p(i) - p(j) : e = ij \in E \text{ s.t. $(S, T)$に被覆されていない} \}$}
+                    \STATE $p(i) \gets \begin{cases}
+                        p(i) - \eps & (i \in \alt<1>{X}{(V^+ \setminus S) \cup T}) \\
+                        p(i)  & (\text{otherwise})
+                    \end{cases}$
+                \ENDIF
+            \ENDWHILE
+        \end{algorithmic} 
+    \end{block}
+
+    \bigskip
+    \onslide<2->
+    最後の反復以外，$M$を使っていない！実質的に保持しているのはポテンシャル$p$のみ．
+\end{frame}
+
+\begin{frame}{逐次最短路法，主双対法，ハンガリー法}
+
+    {\small
+    \begin{center}
+        \renewcommand{\arraystretch}{1.7}
+        \begin{NiceTabular}{c|ccc}
+            \CodeBefore
+                \rowcolors{1}{UniBlue!10}{}
+            \Body
+            & \bf 逐次最短路法 & \bf 主双対法 & \bf ハンガリー法 \\\hline
+            変数 & \Block[]{}{マッチング$M$ \\ \footnotesize (ポテンシャルは陰に保持)} & \Block[]{}{マッチング$M$ \\ ポテンシャル$p$} & \Block[]{}{\footnotesize (マッチングは保持しない) \\ ポテンシャル$p$} \\
+            更新方法 & 最短路(Bellman--Ford) & 最短路(Dijkstra) & 幅優先探索 \\
+            計算量 & $O(mn^2)$ & $O((m + n \log n)n)$ & $O(mn^3)$ \\
+        \end{NiceTabular}
+    \end{center}
+    }
+
+    \bigskip
+    どれも
+    \begin{block}{}
+        \centering
+    ポテンシャル（双対変数）$p:V \to \R$を保持し，\\ マッチング$M$が完全になるまで更新する
+    \end{block}
+    アルゴリズムとみなせる．
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{まとめ}
+\begin{frame}{まとめ: 二部マッチング}
+
+    \structure{まとめ}
+    \begin{itemize}
+        \item 重みなし: 増加道アルゴリズム
+        \item 重みあり: 逐次最短路法，主双対法，ハンガリー法
+        \item 双対変数と最短路問題のポテンシャルの関係
+    \end{itemize}
+    \dotfill ネットワークフローやマトロイド交差へ
+
+    \bigskip
+    \structure{その他のアルゴリズム}
+    \begin{itemize}
+        \item Hopcroft--Karp--Karzanov法 (1973): 重みなし$O(m\sqrt{n})$時間 \\
+        \item 重みあり: $m^{1 + o(1)}$時間（\emph{JACM} 2025\footnote{L. Chen, R. Kyng, Y. P. Liu, R. Peng, M. P. Gutenberg, and S. Sachdeva, \textit{``Maximum Flow and Minimum-Cost Flow in Almost-Linear Time''}, \textit{JACM}, 2025.}, 最小費用流）
+    \end{itemize}
+    
+\end{frame}
+\end{document}
