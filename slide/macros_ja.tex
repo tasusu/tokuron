@@ -41,6 +41,7 @@
 \deftranslation[to=japanese]{Solution}{解}
 \deftranslation[to=japanese]{Fact}{事実}
 \deftranslation[to=japanese]{Proof}{証明}
+\deftranslation[to=japanese]{Corollary}{系}
 \def\proofname{証明}
 \setbeamertemplate{theorems}[normal font] %日本語の場合，定理内を斜体にしない
 
@@ -163,6 +164,11 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 \newcommand{\defiff}{\overset{\text{def}}{\iff}}
 \DeclareMathOperator{\poly}{poly}
 \DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\In}{In}
+\DeclareMathOperator{\Out}{Out}
+\DeclareMathOperator{\val}{val}
+\newcommand{\lo}{{\mathrm{lo}}}
+\newcommand{\up}{{\mathrm{up}}}
 
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
@@ -201,3 +207,5 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 % visible on
 \usetikzlibrary{overlay-beamer-styles}
 \usepackage[normalem]{ulem}
+\usepackage{pxrubrica}
+\usepackage{booktabs}
