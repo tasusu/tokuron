@@ -1,0 +1,705 @@
+\RequirePackage{plautopatch}
+\documentclass[14pt,aspectratio=169,xcolor=dvipsnames,table,onlytextwidth,dvipdfmx]{beamer}
+\input{macros_ja}
+\csname endofdump\endcsname
+\title{組合せ最適化特論}
+\subtitle{第5回（最大流②）}
+\author{担当: \textbf{相馬 輔}}
+\date{2025/12/16}
+
+\begin{document}
+\maketitle
+
+% \input{flowchart}
+
+\begin{frame}<1>[label=outline]{目次}
+\begin{tikzpicture}
+    \tikzstyle{block} = [rectangle, text width=\textwidth, rounded corners, minimum height=4em]
+    \tikzstyle{line} = [draw, -latex]
+
+    \node[block,alt={<1,3->{fill=cyan!10}{fill=red!10}}] (combopt) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{1. Ford--Fulkerson法}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 残余ネットワーク\\
+                \structure{・} 最大流最小カット定理の証明 \\
+                \structure{・} 反復回数 \\
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-2,4->{fill=cyan!10}{fill=red!10}}, below=.5em of combopt] (LP) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{2. Edmonds--Karp法}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} Edmonds--Karp法 \\
+                \structure{・} 距離ラベルを用いた解析 \\
+                \structure{・} まとめ
+            \end{column}
+        \end{columns}
+    };
+\end{tikzpicture}%
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Ford--Fulkerson法}
+\againframe<2|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{最大流問題（復習）}
+    $G = (V, A)$: 有向グラフ 
+
+    \begin{definition}
+        $\varphi: A \to \R$に対し，その\alert{境界} $\partial \varphi: V \to \R$を
+        \[
+            (\partial\varphi)(i) := \sum_{a \in \Out(i)} \varphi(a) - \sum_{a \in \In(i)} \varphi(a)  \qquad (i \in V)
+        \]
+        と定義する．ここで，$\In(i)$, $\Out(i)$はそれぞれ頂点$i$に入る枝，出る枝の集合．
+
+        {\hfill\footnotesize ※$\delta^+(i)$, $\delta^-(i)$と表記する本もある．}
+    \end{definition}
+\end{frame}
+
+\begin{frame}{最大流問題（復習）}
+    $G = (V, A)$: 有向グラフ, $u: A \to \R_+$: 枝容量関数 \\
+    $s, t \in V$: 始点, 終点 
+
+    \begin{definition}[$s$--$t$流]
+        $\varphi: A \to \R$が\alert{$s$--$t$\ruby{流}{フロー}} $\defiff$
+        \begin{itemize}
+            \item $0 \leq \varphi(a) \leq u(a)$ \qquad ($a \in A$) \hfill \textbf{（容量制約）} 
+            \item $(\partial\varphi)(i) = 0$ \qquad ($i \in V \setminus \{s, t\}$) \hfill \textbf{（流量保存則）}
+        \end{itemize}
+    \end{definition}
+
+    \pause
+    \begin{block}{最大流問題 (Maximum Flow Problem)}
+        $s$--$t$流$\varphi$で\alert{流量} \[
+            \val(\varphi) := (\partial\varphi)(s) = -(\partial\varphi)(t) 
+        \]
+        が最大のものを求めよ．
+    \end{block}
+\end{frame}
+
+\tikzgraphsset{declare={flowexample}{%
+    s[at={(0,0)}, as={$s$}];
+    a[at={(2, 1)}];
+    b[at={(2,-1)}];
+    c[at={(4, 1)}];
+    d[at={(4,-1)}];
+    t[at={(6, 0)}, as={$t$}];
+}}
+
+% \begin{frame}[label=flow-example]{例}
+%     \textcolor{UniBlue}{$\varphi$}: 流量 / $u$: 容量
+
+%     \begin{center}
+%     \begin{tikzpicture}[scale=1.6]
+%         \graph[no placement, mygraph]{flowexample};
+%         \foreach \i/\j/\f/\u in {
+%             s/a/5/5,
+%             s/b/2/3,
+%             a/b/2/2,
+%             a/c/3/3,
+%             d/a/0/2,
+%             b/d/4/4,
+%             c/t/4/5,
+%             d/c/1/1,
+%             d/t/3/3
+%         } {
+%             \path[myedges,->] (\i) edge node[above, midway, sloped] {\small \textcolor{UniBlue}{$\f$} / $\u$} (\j);
+%         }
+%     \end{tikzpicture}
+%     \end{center}
+
+%     流量: $7$ （実は最大流）
+% \end{frame}
+
+% \begin{frame}{最大流問題（復習）}
+%     \footnotesize
+%     \begin{primal}
+%         \setlength{\abovedisplayskip}{0pt}
+%         \begin{alignat*}{3}
+%             \text{max}   \quad & \sum_{a \in \Out(s)} \varphi(a) && \quad \\
+%             \text{s.t.}  \quad & \sum_{a \in \Out(i)} \varphi(a)  - \sum_{a \in \In(i)} \varphi(a) = 0 && \quad (i \in V \setminus \{s, t\}) \\
+%                          \quad & 0 \leq \varphi(a) \leq u(a) && \quad (a \in A)
+%         \end{alignat*}
+%     \end{primal}
+%     \begin{dual}
+%         \setlength{\abovedisplayskip}{0pt}
+%         \only<1>{
+%         \begin{alignat*}{3}
+%             \text{min}  \quad & \sum_{a \in A} u(a) y(a)   && \\
+%             \text{s.t.} \quad & x(j) \phantom{{}-{}x(i)} + y(a) &&\;\geq 1  \quad && (a=sj \in \Out(s)) \\
+%                         \quad & \phantom{x(i) } -x(i) + y(a)    &&\;\geq 0  \quad && (a=it \in \In(t)) \\
+%                         \quad & x(j) - x(i) + y(a)              &&\;\geq 0  \quad && (a=ij \in A \setminus \Out(s) \cup \In(t)) \\
+%                         \quad & y(a)                            &&\;\geq 0  \quad && (a \in A)
+%         \end{alignat*}
+%         }
+%         \only<2>{
+%         \begin{alignat*}{3}
+%             \min_{x \in \R^V} & \quad \sum_{a=ij \in A} u(a) \max\{x(i) - x(j), 0\}   \\
+%             \text{s.t.} &\quad  x(s) = 1  \\
+%                         &\quad  x(t) = 0 
+%         \end{alignat*}
+%         }
+%     \end{dual}
+% \end{frame}
+
+\begin{frame}{最大流最小カット定理}
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    \begin{definition}
+        \begin{itemize}
+            \item $X \subseteq V$が\alert{$s$--$t$カット} $\defiff s \in X, t \not\in X$
+            \item $s$--$t$カット$X$の\alert{容量}: $u(\Out(X)) = \sum_{a \in \Out(X)} u(a)$
+        \end{itemize}
+    \end{definition}
+    \end{column}
+    \begin{column}{.3\textwidth}
+    \centering
+
+    \begin{tikzpicture}[scale=0.6]
+        \graph[no placement, mygraph]{
+            s[at={(0,0)}, as={$s$}];
+            a[at={(2, 1)}];
+            b[at={(2,-1)}];
+            c[at={(4, 1)}];
+            d[at={(4,-1)}];
+            t[at={(6, 0)}, as={$t$}];
+            s -> {a, b} -> {c, d} -> t;
+            a -> {b, d};
+            c -> d;
+            {[edges={mypath}]
+                a -> {c, d};
+                b -> d;
+            }
+        };
+        \node[AlertOrange, above] at ($(a)!.5!(c)$) {$\Out(X)$};
+        \begin{scope}[on background layer]
+        \node[mysubset, fit=(s) (a) (b),"{$X$}" {below, UniBlue}] {};
+        \end{scope}
+    \end{tikzpicture}
+        % \tikz{\graph[mygraph, no placement]{
+        %     subgraph C_n [n=4, clockwise];
+        %     5[at={(3,0)}] -- 6[at={(2,1)}] -- 7[at={(2,-1)}] -- ;
+        %     {[edges={mypath}]
+        %         {(1),(2)} -- (6);
+        %         {(2),(3)} -- (7);
+        %     };
+        % };
+    \end{column}
+    \end{columns}
+
+    \pause
+    \bigskip
+    \structure{弱双対性} 任意の$s$--$t$流$\varphi$と$s$--$t$カット$X$に対し，次が成り立つ．
+    \[
+        \val(\varphi) \leq u(\Out(X))
+    \]
+
+    \pause
+    \bigskip
+    \begin{alertblock}{最大流最小カット定理 (Ford--Fulkerson, 1956; Danzig--Fulkerson, 1956)}
+        \[
+            \max_{\text{$\varphi$:~$s$--$t$流}} \val(\varphi) = \min_{\text{$X$:~$s$--$t$カット}} u(\Out(X)) 
+        \]
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{残余ネットワーク}
+    \small 
+    \begin{definition}[残余ネットワーク]
+        \setlength{\abovedisplayskip}{2pt}
+        \setlength{\belowdisplayskip}{2pt}
+        \begin{itemize}
+            \item 
+    $s$--$t$流$\varphi$に対し，\alert{残余ネットワーク} $G_\varphi = (V, A_\varphi)$を次のように定める: 
+    \begin{align*}
+        A_\varphi &:= \Aphiup \cup \Aphilow \\
+        \Aphiup &:= \{ a \in A : \varphi(a) < u(a) \} \quad\text{\color{gray}\footnotesize \dots\dots\dots$\varphi$を増やせる枝} \\
+        \Aphilow &:= \{ a^{-1} : a \in A,\; \varphi(a) > 0  \} \quad \text{\color{gray}\footnotesize \dots\dots\dots$\varphi$を減らせる枝}
+    \end{align*}
+    ここで$a^{-1}$は$a$の逆向き枝．
+
+    \item 残余ネットワークの枝容量$c_\varphi: A_\varphi \to \R_+$を
+    次のように定める:
+    \begin{align*}
+        c_\varphi(a) := \begin{cases}
+            u(a) - \varphi(a) & (a \in \Aphiup) \\
+            \varphi(a^{-1})        & (a \in \Aphilow)
+        \end{cases}
+    \quad\text{\textcolor{gray}{\footnotesize \dots\dots\dots$\varphi$を増減できる余裕量}}
+    \end{align*}
+        \end{itemize}
+    \end{definition}
+\end{frame}
+
+\begin{frame}{例}
+    \small
+   \newcommand{\flowvals}{%
+            s/a/5/5,
+            s/b/2/3,
+            a/b/2/2,
+            a/c/3/3,
+            d/a/0/2,
+            b/d/4/4,
+            c/t/4/5,
+            d/c/1/1,
+            d/t/3/3
+    }
+   \begin{columns}[T]
+   \begin{column}{.5\textwidth}
+    \begin{tikzpicture}[xscale=1.1, yscale=1.2]
+        \graph[no placement, mygraph]{flowexample};
+        \foreach \i/\j/\f/\u in \flowvals {
+            \path[myedges,->] (\i) edge node[above, midway, sloped] {\small \textcolor{UniBlue}{$\f$} / $\u$} (\j);
+        }
+    \end{tikzpicture}
+
+   \end{column}
+   \begin{column}{.5\textwidth}
+    \vspace{1em}
+    \begin{tikzpicture}[xscale=1.1, yscale=1.2]
+        \graph[no placement, mygraph]{flowexample};
+        \foreach \i/\j/\f/\u in \flowvals {
+            % forward edges
+            \ifthenelse{\f < \u}{
+            \path[UniBlue, myedges,->, transform canvas={yshift=2pt}] (\i) edge node[above, midway, sloped] {\small \pgfmathparse{int(subtract(\u, \f))} \textcolor{UniBlue}{$\pgfmathresult$} } (\j);}{}
+            % \path[UniBlue, myedges,->] ($(\i)!1pt!90:(\j)$) edge node[above, midway, sloped] {\small \pgfmathparse{int(subtract(\u, \f))} \textcolor{UniBlue}{$\pgfmathresult$} } ($(\j)!1pt!-90:(\i)$);}{}
+            % backward edges
+            \ifthenelse{\f > 0}{
+            \path[myedges,->,AlertOrange, transform canvas={yshift=-1pt}] (\j) edge node[below, midway, sloped] {\small \textcolor{AlertOrange}{$\f$} } (\i);}{}
+            % \path[myedges,->,AlertOrange] ($(\j)!1pt!90:(\i)$) edge node[below, midway, sloped] {\small \textcolor{AlertOrange}{$\f$} } ($(\i)!1pt!-90:(\j)$);}{}
+        }
+    \end{tikzpicture}
+   \end{column}
+   \end{columns} 
+
+   \bigskip
+   \begin{columns}[T]
+   \begin{column}{.5\textwidth}
+    \centering
+    元のネットワーク $G$\\
+    \textcolor{UniBlue}{$\varphi$}: 流量 / $u$: 容量
+   \end{column}
+   \begin{column}{.5\textwidth}
+    \centering
+    残余ネットワーク $G_\varphi$ \\
+    $\Aphiup$, $\Aphilow$
+   \end{column}
+   \end{columns}
+\end{frame}
+
+
+\begin{frame}{増加道}
+
+    \begin{definition}
+        残余ネットワーク上の$s$--$t$パスを$\varphi$に対する\alert{増加道}と呼ぶ．
+    \end{definition}
+
+    \bigskip
+    \structure{観察} 増加道があると，それに沿って流量を増やせる．
+
+    \begin{center}
+        \small
+    残余ネットワーク $G_\varphi$ \\
+    $\Aphiup$, $\Aphilow$ \\
+        \tikz[baseline=(1.base)]{\graph[mygraph, edges={UniBlue}, grow right=4em]{
+            1[as={$s$}] -> 2 -> 3 ->[AlertOrange] 4 -> 5 ->[AlertOrange] 6 ->[AlertOrange] 7 -> 8[as={$t$}] ;
+        }} 
+        \\[2em]
+        元のグラフ$G$ \\
+        \tikz{\graph[mygraph, grow right=4em]{
+            1[as={$s$}] ->["{$+\eps$}" {above, UniBlue}] 2 ->["{$+\eps$}" {above, UniBlue}] 3 <-["{$-\eps$}" {above, AlertOrange}] 4 ->["{$+\eps$}" {above, UniBlue}] 5 <-["{$-\eps$}" {above, AlertOrange}] 6 <-["{$-\eps$}" {above, AlertOrange}] 7 ->["{$+\eps$}" {above, UniBlue}] 8[as={$t$}] ;
+        }} 
+    \end{center}
+\end{frame}
+
+\begin{frame}{増加道に沿った流の更新}
+    増加道$P$に対し，次の$\varphi^+$を考える:
+    \[
+        \varphi^+(a) := \begin{cases}
+            \varphi(a) \textcolor{UniBlue}{{}+\eps} & (a \in P \cap \Aphiup) \\
+            \varphi(a) \textcolor{AlertOrange}{{}-\eps} & (a^{-1} \in P \cap \Aphilow) \\
+            \varphi(a)        & (\text{otherwise})
+        \end{cases}
+    \]
+    ここで$\eps = \min_{a \in P} c_\varphi(a)$である．このとき，$\varphi^+$は$s$--$t$流であり，その流量は$\val(\varphi^+) = \val(\varphi) + \eps$．
+\end{frame}
+
+\begin{frame}{増加道による最大流の特徴づけ}
+    \begin{lemma}
+        \begin{itemize}
+            \item $s$--$t$流$\varphi$が最大流 $\iff$ $\varphi$に対する増加道が存在しない． 
+            \item $\varphi$に対する増加道が存在しないとき，$G_\varphi$において$s$から到達可能な頂点集合$s \in X \subseteq V \setminus t$は\highlight{$\val(\varphi) = u(\Out(X))$}を満たす．
+        \end{itemize}
+    \end{lemma}
+    \bigskip
+    cf. 弱双対性 \highlight{$\val(\varphi) \leq u(\Out(X))$} \\
+    最大二部マッチングの増加道による特徴づけ（第2回）の一般化
+\end{frame}
+
+
+\begin{frame}{補題の証明}
+    \small
+    \structure{増加道が存在しない $\implies$ $\varphi$は最大流:} 
+
+    $X$を$G_\varphi$において$s$から到達可能な頂点集合とする．
+    すると，$G_\varphi$において$X$から出る枝は存在しない．
+
+    \bigskip
+    ゆえに，以下が成り立つ:
+    \begin{itemize}
+        \item $G$において$X$から出る枝$a \in \Out(X)$に対し，$\varphi(a) = u(a)$
+        \item $G$において$X$に入る枝$a \in \In(X)$に対し，$\varphi(a) = 0$
+    \end{itemize}
+
+    \bigskip
+    よって，
+    \begin{align*}
+        \val(\varphi) &= \sum_{a \in \Out(X)} \varphi(a) - \sum_{a \in \In(X)} \varphi(a) \\
+        &= \sum_{a \in \Out(X)} u(a) - 0 = u(\Out(X)).
+    \end{align*}
+    弱双対が等号で成り立つので，$\varphi$は最大流． \qed
+\end{frame}
+
+\begin{frame}{Ford--Fulkerson法}
+    \small
+    補題から直ちに次のアルゴリズムが得られる．
+
+    \begin{block}{Ford--Fulkerson法}
+    \begin{algorithmic}[1]
+        \STATE $\varphi \equiv 0$.
+        \WHILE {残余ネットワーク$G_\varphi$に増加道$P$が存在}
+            \STATE $\eps \leftarrow \min_{a \in P} c_\varphi(a)$ \textcolor{gray}{\footnotesize \dotfill $P$に沿って増加できる最大の$\eps$}
+            \STATE $\varphi(a) \gets 
+            \begin{cases}
+                \varphi(a) \textcolor{UniBlue}{{}+\eps} & a \in P \cap \Aphiup \\
+                \varphi(a) \textcolor{AlertOrange}{{}-\eps} & a^{-1} \in P \cap \Aphilow \\
+                \varphi(a)        & \text{otherwise}
+            \end{cases}
+            $
+        \ENDWHILE
+        \STATE $X :=$ $G_\varphi$において$s$から到達可能な頂点集合
+        \RETURN $\varphi, X$
+    \end{algorithmic}
+    \end{block}
+
+    \begin{theorem}[Ford--Fulkerson, 1957]
+        Ford--Fulkerson法は停止した場合，最大流と最小カットを返す．
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{例}
+   \small
+
+   \only<1>{
+   \newcommand{\flowvals}{%}
+        s/a/0/5,
+        s/b/0/3,
+        a/b/0/2,
+        a/c/0/3,
+        d/a/0/2,
+        b/d/0/4,
+        c/t/0/5,
+        d/c/0/1,
+        d/t/0/3
+   }}
+    \only<2>{
+   \newcommand{\flowvals}{%}
+        s/a/0/5,
+        s/b/2/3,
+        a/b/0/2,
+        a/c/2/3,
+        d/a/2/2,
+        b/d/2/4,
+        c/t/2/5,
+        d/c/0/1,
+        d/t/0/3
+   }}
+    \only<3>{
+   \newcommand{\flowvals}{%}
+        s/a/2/5,
+        s/b/2/3,
+        a/b/2/2,
+        a/c/2/3,
+        d/a/2/2,
+        b/d/4/4,
+        c/t/2/5,
+        d/c/0/1,
+        d/t/2/3
+   }}
+    \only<4>{
+   \newcommand{\flowvals}{%}
+        s/a/3/5,
+        s/b/2/3,
+        a/b/2/2,
+        a/c/3/3,
+        d/a/2/2,
+        b/d/4/4,
+        c/t/3/5,
+        d/c/0/1,
+        d/t/2/3
+   }}
+    \only<5>{
+   \newcommand{\flowvals}{%}
+        s/a/4/5,
+        s/b/2/3,
+        a/b/2/2,
+        a/c/3/3,
+        d/a/1/2,
+        b/d/4/4,
+        c/t/3/5,
+        d/c/0/1,
+        d/t/3/3
+   }}
+    \only<6>{
+   \newcommand{\flowvals}{%}
+        s/a/5/5,
+        s/b/2/3,
+        a/b/2/2,
+        a/c/3/3,
+        d/a/0/2,
+        b/d/4/4,
+        c/t/4/5,
+        d/c/1/1,
+        d/t/3/3
+   }}
+
+
+   \begin{columns}[T]
+   \begin{column}{.5\textwidth}
+    \vspace{.9em}
+    \begin{tikzpicture}[xscale=1.1, yscale=1.2]
+        \graph[no placement, mygraph, math nodes]{flowexample};
+        \foreach \i/\j/\f/\u in \flowvals
+            \path[myedges,->] (\i) edge node[above, midway, sloped] {\small \textcolor{UniBlue}{$\f$} / $\u$} (\j);
+    \end{tikzpicture}
+   \end{column}
+   \begin{column}{.5\textwidth}
+    \vspace{1em}
+    \begin{tikzpicture}[xscale=1.1, yscale=1.2]
+        \node[inner sep=0pt, text width=1pt] at (0,1.45) {};
+        \node[inner sep=0pt, text width=1pt] at (0,-1.45) {};
+        \graph[no placement, mygraph, math nodes]{flowexample};
+        \foreach \i/\j/\f/\u in \flowvals {
+            % \def\opac{\ifthenelse{\f < \u}{1}{0}}
+            % \path[UniBlue, myedges,->, transform canvas={yshift=2pt}, draw opacity=\opac] (\i) edge node[above, midway, sloped] {\small \pgfmathparse{int(subtract(\u, \f))} \textcolor{UniBlue}{$\pgfmathresult$} } (\j);
+            % forward edges
+            \ifthenelse{\f < \u}{
+            \path[UniBlue, myedges,->, transform canvas={yshift=2pt}] (\i) edge node[above, midway, sloped] {\small \pgfmathparse{int(subtract(\u, \f))} \textcolor{UniBlue}{$\pgfmathresult$} } (\j);}{}
+            % backward edges
+            \ifthenelse{\f > 0}{
+            \path[myedges,->,AlertOrange, transform canvas={yshift=-1pt}] (\j) edge node[below, midway, sloped] {\small \textcolor{AlertOrange}{$\f$} } (\i);}{}
+            % \def\opac{\ifthenelse{\f > 0}{1}{0}}
+            % \path[myedges,->,AlertOrange, transform canvas={yshift=-1pt}, draw opacity=\opac] (\j) edge node[below, midway, sloped] {\small \textcolor{AlertOrange}{$\f$} } (\i);
+        }
+
+        \begin{scope}[on background layer]
+            \draw<1>[line width=1em, yellow] (s) -- (b) -- (d) -- (a) -- (c) -- (t);
+            \draw<2>[line width=1em, yellow] (s) -- (a) -- (b) -- (d) -- (t);
+            \draw<3>[line width=1em, yellow] (s) -- (a) -- (c) -- (t);
+            \draw<4>[line width=1em, yellow] (s) -- (a) -- (d) -- (t);
+            \draw<5>[line width=1em, yellow] (s) -- (a) -- (d) -- (c) -- (t);
+        \end{scope}
+    \end{tikzpicture}
+   \end{column}
+   \end{columns} 
+
+   \bigskip
+   \begin{columns}[T]
+   \begin{column}{.5\textwidth}
+    \centering
+    元のネットワーク $G$\\
+    \textcolor{UniBlue}{$\varphi$}: 流量 / $u$: 容量
+   \end{column}
+   \begin{column}{.5\textwidth}
+    \centering
+    残余ネットワーク $G_\varphi$ \\
+    $\Aphiup$, $\Aphilow$
+   \end{column}
+   \end{columns}
+   \bigskip
+   流量: \textcolor{UniBlue}{\only<1>{$0$}\only<2>{$2$}\only<3>{$4$}\only<4>{$5$}\only<5>{$6$}\only<6>{$7$}}
+   \hfill \onslide<6>{【終了】}
+\end{frame}
+
+\begin{frame}{Ford--Fulkerson法}
+     残余ネットワークの構築・増加道の探索・流の更新: $O(m)$時間 \\
+     {\footnotesize \hfill ($m = |A|$)}
+
+    \bigskip
+    \structure{反復回数}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+
+        \item \alert{枝容量が整数値}のとき: 各反復で流量が少なくとも$1$増加．したがって，最大流量を$F$とすると，高々$F$回の反復．\\ 
+        $\longrightarrow$ 全体では$O(m F)$時間 （\alert{擬多項式時間}）
+
+        \item 枝容量が無理数値のとき: 増加道の選び方によっては，有限回で停止せず，かつ最大でない流に収束してしまう例がある \mycite{Ford--Fulkerson,~1962}
+    \end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Edmonds--Karp法}
+\againframe<3|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Edmonds--Karp法}
+    Ford--Fulkerson法において，\alert{枝数が最小の増加道}を選ぶ． 
+    
+    \bigskip
+    たとえば，幅優先探索で$s$--$t$パスを探索すればよい．
+
+    \bigskip
+    \begin{theorem}[Edmonds--Karp, 1972]
+        \textbf{任意の}枝容量に対し，Edmonds--Karp法は$O(mn)$回の反復で終了する．したがって，$O(m^2 n)$時間で最大流と最小カットを求められる．
+    \end{theorem}
+    \hfill \alert{強多項式時間} \\
+    {\footnotesize \hfill ($n = |V|$, $m = |A|$)} 
+\end{frame}
+
+\begin{frame}{Edmonds--Karp法の解析}
+    $\varphi$: Edmonds--Karp法の途中の流 \\
+    $P$: 選ばれた$\varphi$増加道 \\
+    $\varphi^+$: $P$に沿って更新した流
+
+    \vfill
+    \begin{lemma}[距離ラベルの単調性]
+        $d(i) :=$ $G_\varphi$における頂点$i$から$t$までの最短距離（枝数） \\
+        $d^+(i) :=$ $G_{\varphi^+}$における頂点$i$から$t$までの最短距離（枝数） \\
+        とする．\\ 
+        このとき，任意の頂点$i \in V$に対し，$d(i) \leq d^+(i)$が成り立つ．
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{Edmonds--Karp法の解析}
+    \structure{(証明)}
+    背理法．$d(i) > d^+(i)$となる頂点$i$が存在すると仮定する．
+    そのような頂点$i$の中で$d^+(i)$が最小のものを取る．{\footnotesize ($i \neq t$)}
+    
+    \bigskip
+    $j$: $G_{\varphi^+}$において$i$から$t$までの最短路における$i$の直後の頂点 
+    
+    \bigskip
+    \structure{Claim.} $ij \notin A_{\varphi}$ \\
+    {\small \structure{(∵)} もし$ij \in A_{\varphi}$ならば，
+    \[
+        d(i) \leq d(j) + 1 \leq d^+(j) + 1 = d^+(i) < d(i)
+    \]
+    となり矛盾．\qed
+    }
+
+\end{frame}
+
+\begin{frame}{Edmonds--Karp法の解析}
+    \structure{Claim.} $ij \notin A_{\varphi}$ \\
+
+    \bigskip
+    したがって，
+    \begin{itemize}
+        \item $ji$が$G_\varphi$に存在し，その逆向き枝$ij$は存在しない．
+        \item また，更新後の$G_{\varphi^+}$に$ij$が現れているので，$ji$は$G_\varphi$の最短路$P$に含まれていたことになる．よって，\highlight{$d(j) = d(i) + 1$}.
+    \end{itemize}
+
+    \bigskip
+    すると，
+    \begin{align*}
+        d(i) &= d(j) - 1  \tag{上式を移項}\\ 
+             &\leq d^+(j) - 1 \tag{$d(j) \leq d^+(j)$} \\
+             &= d^+(i) - 2 \tag{$j$は$G_{\varphi^+}$において$i$の直後の頂点}
+    \end{align*}
+    となり，そもそもの仮定$d(i) > d^+(i)$に矛盾．
+    \qed
+\end{frame}
+
+% \begin{frame}{Edmonds--Karp法の解析}
+%     \begin{lemma}
+%         ある更新で枝$ij$が最短路に含まれたたとする．
+%         さらに，その後の更新で$ji$が最短路に含まれたとする．
+%         それぞれの時点における距離ラベルを$d, d'$とすると，$d'(i) \geq d(i) + 2$が成り立つ．
+%     \end{lemma}
+%     \structure{(証明)} $uv$が最短路に含まれるとき，$d(u) = d(v) + 1$が成り立つことを用いる．
+
+%     TODO: 図を描く
+%     \qed
+% \end{frame}
+
+\begin{frame}{Edmonds--Karp法の解析}
+    \small
+
+    \begin{theorem}[Edmonds--Karp]
+        任意の枝容量に対し，Edmonds--Karp法は$O(mn)$回の反復で終了する．したがって，$O(m^2 n)$時間で最大流と最小カットを求められる．
+    \end{theorem}
+
+
+    \structure{(証明)}
+    $ij \in A_\varphi$が，更新後に$ij \notin A_{\varphi^+}$となったとき，$ij$は\alert{飽和}したという．
+
+    \begin{itemize}[<+->]
+        \setlength\itemsep{0em}
+        \item 各反復では，$P$の少なくとも1本の枝が飽和する．飽和した枝$ij$について$d(i) = d(j) + 1$が成り立つ．
+        % $\longrightarrow$ 高々$m$回の反復後に，$ij$と$ji$の両方が最短路に含まれる． \\
+        % $\longrightarrow$ 高々$m$回の反復後に，ある$i$で$d(i)$が$2$以上増大する（補題）
+
+        \item 一度飽和した$ij$が再び飽和するには，その間に$ji$が一度は最短路に含まれる必要がある．そのときの距離ラベルに関して，$d(j) = d(i) + 1$が成り立つ．
+        
+        \item 距離ラベル$d(i) \leq n$ or $d(i) = +\infty$ ($i$から$t$へ到達不能の場合) 
+        % $\longrightarrow$ 各$d(i)$は高々$n$回増大しうる
+    \end{itemize}
+    \bigskip
+    \onslide<+->
+    よって，距離ラベルの単調性と合わせると，各枝は高々$n/2$回飽和しうる．ゆえに全体の反復は$O(mn)$回． 
+    \qed
+\end{frame}
+
+\begin{frame}{Edmonds--Karp法の解析}
+    \begin{center}
+        \begin{tikzpicture}
+            %grid
+            \draw[gray!30] (0,0) grid (11, 5);
+            \draw[->, thick] (0,0) -- (0, 5);
+            \node[left] at (0,0) {$0$};
+            \node[left] at (0,5) {$n$};
+
+            \tikzset{mydot/.style={circle, inner sep=1.5pt}}
+            \node[mydot, fill=UniBlue, "{$d(i)$}" below]  (di)   at (1 ,2) {};
+            \node[mydot, fill=UniPink, "{$d(j)$}" below]  (dj)   at (2 ,1) {};
+            \node[mydot, fill=UniBlue, "{$d'(i)$}" below] (dpi)  at (5 ,2) {};
+            \node[mydot, fill=UniPink, "{$d'(j)$}" below] (dpj)  at (6 ,3) {};
+            \node[mydot, fill=UniBlue, "{$d''(i)$}" below] (dppi) at (9 ,4) {};
+            \node[mydot, fill=UniPink, "{$d''(j)$}" below] (dppj) at (10,3) {};
+            \node[align=center, font=\footnotesize] at (di |- 0,-1) {$ij$が飽和したとき \\ $d(i) = d(j) + 1$};
+            \node[align=center, font=\footnotesize] at (dpj |- 0,-1) {$ji$が最短路に含まれたとき \\ $d'(j) = d'(i) + 1$};
+            \node[align=center, font=\footnotesize] at (dppj |- 0,-1) {$ij$が再度飽和したとき \\ $d''(i) = d''(j) + 1$};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{まとめ}
+    \structure{最大流問題}
+    \begin{itemize}
+        \item 最大流最小カット定理，整数性
+        \item Ford--Fulkerson法: 枝容量が整数値のとき$O(m F)$時間
+        \item Edmonds--Karp法: $O(m^2 n)$時間
+    \end{itemize}
+
+    \bigskip
+    \structure{その他の最大流アルゴリズム}
+    \begin{itemize}
+        \setlength{\itemsep}{1em}
+        \item Dinitz (1970): $O(mn^2)$時間 \\
+        動的木を用いると $O(mn \log n)$時間 (Sleator--Tarjan, 1983)
+        \item プッシュ・再ラベル (Goldberg--Tarjan, 1988): $O(n^2\sqrt{m})$時間 \\
+        動的木を用いると $O(mn \log (n^2/m))$時間 
+    \end{itemize}
+    
+\end{frame}
+
+\end{document}
