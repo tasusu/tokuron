@@ -129,6 +129,7 @@
 \tikzset{mypath2/.style={ultra thick, dashed, draw=UniGreen}}
 \tikzset{mysubset/.style={draw,UniBlue,dotted,thick,fill=UniBlue!10}}
 \tikzset{graphs/mygraph/.style={nodes={mynodes}, edges={myedges}, empty nodes}}
+\tikzset{nomargin/.style={inner sep=0pt, outer sep=0pt}}
 %% graph macros
 \tikzgraphsset{declare={mybipartite}{%
 subgraph I_nm [V={1,2,3,4,5,6}, W={a,b,c,d,e,f}];
@@ -169,6 +170,9 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 \DeclareMathOperator{\val}{val}
 \newcommand{\lo}{{\mathrm{lo}}}
 \newcommand{\up}{{\mathrm{up}}}
+\newcommand{\caI}{\mathcal{I}}
+\newcommand{\caB}{\mathcal{B}}
+\newcommand{\bM}{\mathbf{M}}
 
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
@@ -209,3 +213,6 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 \usepackage[normalem]{ulem}
 \usepackage{pxrubrica}
 \usepackage{booktabs}
+
+\newcommand{\Aphiup}{\textcolor{UniBlue}{A_\varphi^\up}}
+\newcommand{\Aphilow}{\textcolor{AlertOrange}{A_\varphi^\lo}}

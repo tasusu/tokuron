@@ -1,0 +1,917 @@
+\RequirePackage{plautopatch}
+\documentclass[14pt,aspectratio=169,xcolor=dvipsnames,table,onlytextwidth,dvipdfmx]{beamer}
+\input{macros_ja}
+\csname endofdump\endcsname
+\title{組合せ最適化特論}
+\subtitle{第6回（最小費用流）}
+\author{担当: \textbf{相馬 輔}}
+\date{2025/12/23}
+
+\begin{document}
+\maketitle
+
+\input{flowchart}
+
+\begin{frame}<1>[label=outline]{目次}
+\begin{tikzpicture}
+    \tikzstyle{block} = [rectangle, text width=\textwidth, rounded corners, minimum height=4em]
+    \tikzstyle{line} = [draw, -latex]
+
+    \node[block,alt={<1,3->{fill=cyan!10}{fill=red!10}}] (combopt) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{1. 最小費用流問題}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 定式化 \\
+                \structure{・} Hitchcock型輸送問題 \\
+                \structure{・} Galeの定理 \\
+                \structure{・} 負閉路最適性条件 \\
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-2,4->{fill=cyan!10}{fill=red!10}}, below=.5em of combopt] (LP) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{2. アルゴリズム}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 逐次最短路法，主双対法 \\
+                \structure{・} 容量スケーリング \\
+                \structure{・} まとめ
+            \end{column}
+        \end{columns}
+    };
+\end{tikzpicture}%
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{最小費用流問題}
+\againframe<2|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{境界}
+    $G = (V, A)$: 有向グラフ 
+
+    \begin{definition}
+        $\varphi: A \to \R$に対し，その\alert{境界} $\partial \varphi: V \to \R$を
+        \[
+            (\partial\varphi)(i) := \sum_{a \in \Out(i)} \varphi(a) - \sum_{a \in \In(i)} \varphi(a)  \qquad (i \in V)
+        \]
+        と定義する．ここで，$\In(i)$, $\Out(i)$はそれぞれ頂点$i$に入る枝，出る枝の集合．
+
+        {\hfill\footnotesize ※$\delta^+(i)$, $\delta^-(i)$と表記する本もある．}
+    \end{definition}
+\end{frame}
+
+\begin{frame}{$b$流}
+    $G = (V, A)$: 有向グラフ, $u: A \to \R_+$: 枝容量関数, \\
+    \alert{$b: V \to \R$ with $b(V) = 0$}
+
+    \begin{definition}[$b$流]
+        $\varphi: A \to \R$が\alert{（実行可能）$b$流} $\defiff$
+        \begin{itemize}
+            \item $0 \leq \varphi(a) \leq u(a)$ \qquad ($a \in A$) \hfill \textbf{（容量制約）} 
+            \item $(\partial\varphi)(i) = b(i)$ \qquad ($i \in V$) \hfill \textbf{（境界条件）}
+        \end{itemize}
+    \end{definition}
+
+    \structure{解釈}
+    \begin{itemize}
+        \item $b(i) > 0$: 供給点，湧き出し口
+        \item $b(i) = 0$: 流量保存する頂点
+        \item $b(i) < 0$: 需要点，吸い込み口
+    \end{itemize}
+
+    特に，$b \equiv 0$のとき，$\varphi$は\alert{循環流 (circulation)}と呼ばれる．
+\end{frame}
+
+\begin{frame}{最小費用流問題}
+
+    \begin{itemize}
+    \item $G = (V, A)$: 有向グラフ
+    \item $u: A \to \R_+$: 枝容量関数 \\ 
+    \item $b: V \to \R$ with $b(V) = 0$ \\ 
+    \item \alert{$c: A \to \R$: 枝費用関数}
+    \end{itemize}
+
+    \bigskip
+    \begin{block}{最小費用流問題 (Minimum Cost Flow Problem)}
+        $b$流$\varphi$で費用$c(\varphi) := \sum_{a \in A} c(a) \varphi(a) $が最小のものを求めよ． \\
+        （もしくは，$b$流が存在しないことを示せ）
+    \end{block}
+\end{frame}
+
+\begin{frame}<1>[label=mcf-LP]{最小費用流: 線形計画問題として}
+    最小費用流の方がLPとして美しい形になる．
+
+    \footnotesize
+    \begin{primal}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{3}
+            &\text{min}   &\quad& c^\top\varphi &\quad& \\
+            &\text{s.t.}  &\quad& \sum_{a \in \Out(i)} \varphi(a)  - \sum_{a \in \In(i)} \varphi(a) = b(i) &\quad& (i \in V) \\
+            &             &\quad& 0 \leq \varphi(a) \leq u(a) &\quad& (a \in A) 
+        \end{alignat*}
+    \end{primal}
+    \onslide<2>{（後の都合のため）$x$の符号を反転すると．．．}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \alt<2>{
+        \begin{alignat*}{3}
+            &\max_{x \in \R^V, y \in \R_+^A}  &\quad& -\sum_{i \in V} b(i) x(i) - \sum_{a \in A} u(a) y(a) &\quad& \\
+            &\text{s.t.} &\quad& -x(i) + x(j) - y(a) \leq c(a)  &\quad& (a=ij \in A) \\
+            &            &\quad& y(a) \geq 0  &\quad& (a \in A)
+        \end{alignat*}
+        }{
+        \begin{alignat*}{3}
+            &\max_{x \in \R^V, y \in \R_+^A}  &\quad& \sum_{i \in V} b(i) x(i) - \sum_{a \in A} u(a) y(a) &\quad& \\
+            &\text{s.t.} &\quad& x(i) - x(j) - y(a) \leq c(a)  &\quad& (a=ij \in A) \\
+            &            &\quad& y(a) \geq 0  &\quad& (a \in A)
+        \end{alignat*}
+        }
+    \end{dual}
+\end{frame}
+
+
+\tikzgraphsset{declare={flowexample}{%
+    s[at={(0,0)}, as={$s$}];
+    a[at={(2, 1)}];
+    b[at={(2,-1)}];
+    c[at={(4, 1)}];
+    d[at={(4,-1)}];
+    t[at={(6, 0)}, as={$t$}];
+}}
+
+\begin{frame}{最大流 $\subset$ 最小費用流}
+    $s$--$t$最大流は最小費用流問題の特殊ケース．
+
+    \bigskip
+    \small
+    \begin{columns}[T]
+    \begin{column}{.6\textwidth}
+    $G$に枝$a^* = ts$を追加した有向グラフを$G'$とし，その上の循環流を考える．
+
+    \bigskip 
+    容量
+    \[
+        u'(a) := \begin{cases}
+            +\infty & (a = a^*) \\
+            u(a) & (a \in A) 
+        \end{cases} 
+    \]
+    枝費用
+    \[
+        c(a) := \begin{cases}
+            -1 & (a = a^*) \\
+            0 & (\text{otherwise}) 
+        \end{cases}
+    \]
+    とすればよい．
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+    \begin{tikzpicture}[xscale=.7]
+        \graph[no placement, mygraph]{flowexample};
+        \foreach \i/\j/\f/\u in {
+            s/a/5/5,
+            s/b/2/3,
+            a/b/2/2,
+            a/c/3/3,
+            d/a/0/2,
+            b/d/4/4,
+            c/t/4/5,
+            d/c/1/1,
+            d/t/3/3
+        } {
+            \path[draw,myedges,->] (\i) -- (\j);
+        }
+        \coordinate[below=4em of t] (tbelow);
+        \draw[AlertOrange,mypath,->] (t) -- (tbelow) -- node[below]{$a^*$} (s |- tbelow) -- (s);
+    \end{tikzpicture}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{最短路問題 $\subset$ 最小費用流}
+    最短路問題は最小費用流問題の特殊ケース．
+
+    \bigskip
+    \small
+    \begin{itemize}
+        \item 容量: $u \equiv +\infty$ 
+        \item 境界:
+    $b(i) = 
+        \begin{cases}
+            +1 & (i = s) \\
+            -1 & (i = t) \\
+            0  & (\text{otherwise})
+        \end{cases}$ 
+        \item 費用 $c = \ell$ (最短路問題の枝長)
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Hitchcock型輸送問題}
+    \small
+    $G = (V^+, V^-; E)$: 二部グラフ \\
+    $b^+: V^+ \to \R_+$: 供給関数, $b^-: V^- \to \R_+$: 需要関数 with $b^+(V^+) = b^-(V^-)$ \\
+    $c: E \to \R$: 枝費用関数
+
+    \begin{columns}[T]
+    \begin{column}{.5\textwidth}
+    \begin{block}{Hitchcock型輸送問題}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{3}
+            &\text{min}   &\quad& \sum_{(i,j) \in E} c(i,j) p(i,j)  & \\
+            &\text{s.t.} &\quad& \sum_{j \in \Gamma(i)} p(i, j) = b^+(i) &\quad& (i \in V^+) \\
+            &                  &\quad& \sum_{i \in \Gamma(j)} p(i, j) = b^-(j) &\quad& (j \in V^-) \\
+            &                  &\quad& p(i,j) \geq 0 &\quad& ((i,j) \in E)
+        \end{alignat*}
+    \end{block}
+    \end{column}
+    \begin{column}{.5\textwidth}
+        \centering
+        \begin{tikzpicture}[>=latex]
+        \foreach \i in {1,2,3} {
+            \node[inner sep=0pt](v\i) at ($(0, -\i*2)$) {\coloremojiucs[scale=2]{:factory:}};
+            \node[inner sep=0pt](w\i) at ($(3, -\i*2)$) {\coloremojiucs[scale=2]{:convenience_store:}};
+        }
+        \graph[mygraph]{
+            {(v1), (v2), (v3)} --[complete bipartite] {(w1), (w2), (w3)}
+        };
+        \path (v1)--(w1) node[midway,above,align=center]{\footnotesize 輸送 $p(i,j)$ \\ \reflectbox{\coloremoji{🚛}}};
+        \node[above=5pt of v1] {$V^+$};
+        \node[above=5pt of w1] {$V^-$};
+        \node[left =3pt of v1, font=\footnotesize, align=center] {供給 \\ $b^+(i)$};
+        \node[right=3pt of w1, font=\footnotesize, align=center] {需要 \\ $b^-(j)$};
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{輸送問題と最小費用流}
+    \small
+    \begin{lemma}
+        $n$頂点, $m$枝の最小費用流問題は，$n+m$頂点, $2m$枝のHitchcock型輸送問題に帰着できる．
+    \end{lemma}
+
+    \begin{columns}[T]
+    \begin{column}{.65\textwidth}
+    \structure{(証明)}
+    $G' = (V^+, V^-; E)$, $b^+$, $b^-$, $c$を次のように構成する:
+    \begin{itemize}
+        \setlength{\itemsep}{0em}
+        \item $V^+ := A$, $V^- := V$
+        \item $E = \bigcup_{a=ij \in A} \{ (a, i), (a, j)\}$
+        \item $b^+(a) := u(a)$ \quad ($a \in V^+$) \\
+              $b^-(i) := u(\Out(i)) - b(i)$ \quad ($i \in V^-$)
+        \item $c(a, i) := 0$, $c(a, j) := c(a)$ \quad ($a=ij \in A$)
+    \end{itemize}
+    \end{column}
+    \begin{column}{.35\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \graph[mygraph, grow right=1.7cm]{
+                subgraph I_nm[V={a1, a2}, W={1, 2, 3}];
+                a1 -- {1, 2};
+                a2 -- {2, 3};
+            };
+            \node[above=1pt of a1, font=\footnotesize, align=center] {$A$};
+            \node[above=1pt of 1, font=\footnotesize, align=center] {$V$};
+            \node[left=1pt of a1, font=\footnotesize, align=center] {$u(a)$};
+            \node[right=1pt of 2, font=\footnotesize, align=center] {$u(\Out(i)) - b(i)$};
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+    \bigskip
+    $b^+(V^+) = u(A) = \sum_{i \in V} (u(\Out(i)) - b(i)) = b^-(V^-)$より，これはHitchcock型輸送問題を定める．
+\end{frame}
+
+\begin{frame}{輸送問題と最小費用流}
+    \small
+    \begin{lemma}
+        $n$頂点, $m$枝の最小費用流問題は，$n+m$頂点, $2m$枝のHitchcock型輸送問題に帰着できる．
+    \end{lemma}
+
+    \begin{columns}[T]
+    \begin{column}{.65\textwidth}
+    \structure{(証明)}
+    $(G, u)$上の$b$流$\varphi$に対し，
+    \begin{align*}
+        p(a, i) &:= u(a) - \varphi(a) \\
+        p(a, j) &:= \varphi(a) 
+    \end{align*}
+    ($a=ij \in A$)と定めると，$p$は輸送問題の実行可能解であり，$c'(p) = c(\varphi)$.
+    \end{column}
+    \begin{column}{.35\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \graph[mygraph, grow right=1.7cm]{
+                subgraph I_nm[V={a1, a2}, W={1, 2, 3}];
+                a1 -- {1, 2};
+                a2 -- {2, 3};
+                {[edges={UniBlue, thick}]
+                    a1 --["{\footnotesize $u(a) - \varphi(a)$}", above] 1; 
+                    a1 --["{\footnotesize $\varphi(a)$}", {below, sloped}] 2; 
+                }
+            };
+            \node[above=6pt of a1, font=\footnotesize, align=center] {$A$};
+            \node[above=6pt of 1, font=\footnotesize, align=center] {$V$};
+            \node[left=1pt of a1, font=\footnotesize, align=center] {$u(a)$};
+            \node[right=1pt of 2, font=\footnotesize, align=center] {$u(\Out(i)) - b(i)$};
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+    \bigskip
+    逆に，輸送問題の実行可能解$p$に対し，
+    \begin{align*}
+        \varphi(a) := p(a, j) \quad (a=ij \in A)
+    \end{align*}
+    と定めると，$\varphi$は$(G, u)$上の$b$流であり，$c(\varphi) = c'(p)$. \qed
+\end{frame}
+
+\begin{frame}{実行可能性: Galeの定理}
+    \small
+    \begin{theorem}
+        （もし存在するならば）$b$流は1回の最大流問題で求められる．
+    \end{theorem}
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \structure{(証明)}
+    右図のグラフ$G' = (V', A')$と枝容量を考える:
+    \begin{align*}
+        u'(a) &= 
+        \begin{cases}
+            u(a)  & (a \in A) \\
+            b(i)  & (a=si, b(i) > 0) \\
+            -b(i) & (a=it, b(i) < 0) \\
+        \end{cases}
+    \end{align*}
+    $(G', u')$の流量$b(V^+)$の$s$--$t$流 $\longleftrightarrow$ $(G, u)$の$b$流 \qed
+    \end{column}
+    \begin{column}{.3\textwidth}
+    
+    \end{column}
+    \end{columns}
+
+    \pause\bigskip
+    \begin{corollary}[Gale, 1957]
+        $b$流が存在 $\iff$ $b(X) \leq u(\Out_G(X))$ \quad ($X \subseteq V$)
+    \end{corollary}
+    \structure{(証明)} ($G'$の$s$--$t$カット容量) $\geq b(V^+)$ を書き換える． \qed
+\end{frame}
+
+\begin{frame}{残余ネットワーク}
+    \small
+    $b$流に関しても残余ネットワークの定義は同じ．
+
+    \begin{definition}[残余ネットワーク]
+        \setlength{\abovedisplayskip}{2pt}
+        \setlength{\belowdisplayskip}{2pt}
+        \begin{itemize}
+            \item 
+    $b$流$\varphi$に対し，\alert{残余ネットワーク} $G_\varphi = (V, A_\varphi)$を次のように定める: 
+    \begin{align*}
+        A_\varphi &:= \Aphiup \cup \Aphilow \\
+        \Aphiup &:= \{ a \in A : \varphi(a) < u(a) \} \quad\text{\color{gray}\footnotesize \dots\dots\dots$\varphi$を増やせる枝} \\
+        \Aphilow &:= \{ a^{-1} : a \in A,\; \varphi(a) > 0  \} \quad \text{\color{gray}\footnotesize \dots\dots\dots$\varphi$を減らせる枝}
+    \end{align*}
+    ここで$a^{-1}$は$a$の逆向き枝．
+
+    \item 残余ネットワークの枝容量$c_\varphi: A_\varphi \to \R_+$を
+    次のように定める:
+    \begin{align*}
+        c_\varphi(a) := \begin{cases}
+            u(a) - \varphi(a) & (a \in \Aphiup) \\
+            \varphi(a^{-1})        & (a \in \Aphilow)
+        \end{cases}
+    \quad\text{\textcolor{gray}{\footnotesize \dots\dots\dots$\varphi$を増減できる余裕量}}
+    \end{align*}
+        \end{itemize}
+    \end{definition}
+\end{frame}
+
+\begin{frame}{残余ネットワークを用いた流の更新}
+    \small
+    $\varphi$: $b$流 
+    
+    \bigskip
+    残余ネットワーク$G_\varphi$上のパス or 閉路$Q$に沿って流を更新する:
+    \[
+        \varphi^+(a) := \begin{cases}
+            \varphi(a) \textcolor{UniBlue}{{}+\eps} & (a \in Q \cap \Aphiup) \\
+            \varphi(a) \textcolor{AlertOrange}{{}-\eps} & (a^{-1} \in Q \cap \Aphilow) \\
+            \varphi(a)        & (\text{otherwise})
+        \end{cases}
+    \]
+    ここで，$\eps \leq \min_{a \in Q} c_\varphi(a)$.
+
+    \pause
+    \bigskip
+    \structure{観察}
+        \begin{itemize}
+            \item $Q$が$s$--$t$パスならば，$\varphi^+$は$b' = b + \eps(\be_s - \be_t)$に関する$b'$流．
+            \item $Q$が閉路ならば，$\varphi^+$は$b$流．
+        \end{itemize}
+\end{frame}
+
+\begin{frame}{残余ネットワーク}
+    \small
+    さらに残余ネットワークの枝長$\ell_\varphi: A_\varphi \to \R$を次のように定める:
+        \[
+            \ell_\varphi(a) := \begin{cases}
+                \phantom{-}c(a) & (a \in \Aphiup) \\
+                -c(a^{-1}) & (a \in \Aphilow)
+            \end{cases}
+        \]
+    \structure{観察} $Q$に沿った流の更新により，費用は次のように変化する:
+    \begin{block}{}
+    \setlength{\abovedisplayskip}{0em}
+    \begin{align*}
+        c(\varphi^+) = c(\varphi) + \eps \ell_\varphi(Q)
+    \end{align*}
+    \end{block}
+
+    \vfill
+    \pause\vfill
+    \structure{(復習)}
+    $p: V \to \R$が枝長$\ell: A \to \R$に関する\alert{ポテンシャル} \\ 
+    $\defiff$ $p(i) - p(j) \leq \ell(a)$ \quad ($a=ij \in A$)
+\end{frame}
+
+\begin{frame}{負閉路最適性条件}
+    \begin{theorem}[Klein (1967), Ford--Fulkerson (1962)]
+        $b$流$\varphi$に対し，次の3条件は同値:
+        \begin{enumerate}
+            \item $\varphi$は最小費用流
+            \item 残余ネットワーク$G_\varphi$に（$\ell_\varphi$に関する）負閉路が存在しない
+            \item 残余ネットワーク$G_\varphi$に（$\ell_\varphi$に関する）ポテンシャルが存在
+        \end{enumerate}
+    \end{theorem}
+
+    最小重み完全マッチングの最適性条件（第3回）の一般化．
+
+    \pause
+    \bigskip
+    \small
+    \structure{(証明)}
+    \textbf{①$\implies$②:}
+    負閉路$C$に沿って$\varphi$を更新すると，$\varphi^+$は$b$流で，$c(\varphi^+) = c(\varphi) + \eps \ell_\varphi(C) < c(\varphi)$となり矛盾．
+    
+    \pause
+    \bigskip
+    \textbf{②$\iff$③:} 最短路問題（第3回）でやった
+
+    \pause
+    \bigskip
+    \textbf{③$\implies$①:} LPの相補性条件から従う（次スライド）
+\end{frame}
+
+\againframe{mcf-LP}
+
+\begin{frame}[t]{相補性条件}
+    \small
+    $G_\varphi$のポテンシャル$x: V \to \R$に対し，$y: A \to \R$を次のように定める．
+    \setlength{\abovedisplayskip}{3pt}
+    \begin{align*}
+        y(a) := \begin{cases}
+            -c(a) + x(j) - x(i) & (\varphi(a) > 0) \text{\footnotesize ・・・$a^{-1}$に対するポテンシャル条件のスラック} \\
+            0 & (\text{otherwise})
+        \end{cases}
+    \end{align*}
+
+    \structure{Claim} $(x, y)$は双対実行可能解．
+    \pause
+
+    {\footnotesize \structure{(∵)} 
+
+    \structure{$y \geq 0$:}
+    $\varphi(a) > 0$ のとき，$a^{-1}$が$G_\varphi$に存在するので，$x$がポテンシャルより
+    \setlength{\abovedisplayskip}{3pt}
+    \setlength{\belowdisplayskip}{3pt}
+    \[
+    x(i) - x(j) \leq \ell_\varphi(a^{-1}) = -c(a).
+    \]
+    よって，$y(a) \geq 0$. 
+    
+    \bigskip
+    \structure{$x(j) - x(i) - y(a) \leq c(a)$:}
+    $\varphi(a) > 0$のときは，$y$の定義から自明に制約を満たす．$\varphi(a) = 0$のときは，$a$が$G_\varphi$に存在するので，ポテンシャル条件より
+    \[ 
+        x(j) - x(i) \leq \ell_\varphi(a) = c(a)
+    \] 
+    $y(a) = 0$より，制約を満たす．
+    \qed}
+\end{frame}
+    
+\begin{frame}[t]{相補性条件}
+    \postit{\footnotesize
+    \begin{minipage}{0.40\linewidth}
+        \setlength{\abovedisplayskip}{0pt}
+    \begin{align*}
+        y(a) := \begin{cases}
+            -c(a) + x(j) - x(i) & (\varphi(a) > 0) \\
+            0 & (\text{otherwise})
+        \end{cases}
+    \end{align*}
+    \end{minipage}}
+
+    \small
+    \structure{Claim} $\varphi$と$(x, y)$は相補性条件を満たす:
+    \setlength{\abovedisplayskip}{3pt}
+    \setlength{\belowdisplayskip}{3pt}
+    \begin{align*}
+        \varphi(a) (c(a) + x(i) - x(j) + y(a)) &= 0 \quad (a = ij \in A) \\
+        (u(a) - \varphi(a)) y(a) &= 0 \quad (a \in A)
+    \end{align*}
+    すなわち，$\varphi$は最小費用流．
+    \pause\vfill
+    {\footnotesize \structure{(∵)} 
+    相補性条件の1つ目は$y$の定義より自明なので，2つ目を示す．
+    
+    \smallskip
+    背理法．$\varphi(a) < u(a)$かつ$y(a) > 0$と仮定する．このとき，$y$の定義から$\varphi(a) > 0$である．よって，$a$と$a^{-1}$の両方が$G_\varphi$に存在するので，ポテンシャル条件より次が成立:
+    \setlength{\abovedisplayskip}{3pt}
+    \setlength{\belowdisplayskip}{3pt}
+    \begin{align*}
+    x(j) - x(i) &\leq c(a) \\
+    x(i) - x(j) &\leq - c(a).
+    \end{align*}
+    ∴$x(j) - x(i) = c(a)$. ところが，これを$y$の定義に代入すると，$y(a) = 0$となってしまい矛盾．
+    \qed}
+\end{frame}
+
+% \begin{frame}{相補性条件}
+%     \postit{\footnotesize $x(j) - x(i) - y(a) \leq c(a)$ \quad ($a=ij \in A$) \\ 
+%             \footnotesize $y(a) \geq 0$ \quad ($a \in A$)}%
+%     \small
+%     \begin{block}{}
+%         $b$流$\varphi$, 双対実行可能解$(x, y) \in \R^V \times \R_+^A$が最適$\iff$
+%         \begin{itemize}
+%             \item $x(j) - x(i) - y(a) = c(a)$ \quad ($a=ij \in A: \varphi(a) > 0$) \\
+%             \onslide<2->{$\implies$ $x(i) - x(j) \leq -c(a)$ \dotfill $a^{-1} = ji \in \Aphilow$のポテンシャル条件}
+%             \item $y(a) = 0$ \quad ($a = ij \in A: \varphi(a) < u(a)$) \\
+%             \onslide<2->{$\implies$ $x(j) - x(i) \leq c(a)$ \dotfill $a = ij \in \Aphiup$のポテンシャル条件}
+%             \item 
+%             $\varphi(a) = 0$ \qquad ($a = ij \in A: x(j) - x(i) - y(a) < c(a)$) \\
+%             $\varphi(a) = u(a)$ \quad ($a \in A: y(a) > 0$) \\
+%             \onslide<2->{$\implies$ $a^{-1}, a$は残余ネットワークに存在しない}
+%         \end{itemize}
+%     \end{block}
+    
+%     \vfill
+%     \onslide<3->
+%     つまり$x$はポテンシャル．逆に，ポテンシャルから双対最適解$(x,y)$を構成できる．
+
+%     \bigskip
+%     ∴ $G_\varphi$にポテンシャルが存在 $\iff$ $\varphi$と相補性条件を満たす双対実行可能解$(x,y)$が存在 
+%      $\iff$ $\varphi$は最適解 \qed
+% \end{frame}
+
+% \begin{frame}{流の分解定理}
+%     $V^+ = \{i \in V : b(i) > 0\}$, $V^- = \{i \in V : b(i) < 0\}$
+%     \begin{theorem}
+%         $b$流$\varphi$は$V^+$--$V^-$パスと閉路の錐結合で表せる．すなわち，$\varphi = \sum_{k=1}^p \lambda_k \ones_{P_k} + \sum_{\ell=1}^q \mu_l \ones_{C_l}$ ($P_k$:$V^+$--$V^-$パス, $C_\ell$:閉路, $\lambda_k, \mu_\ell > 0$)
+%     \end{theorem}
+%     \structure{(証明)} まず循環流($b \equiv 0$)の場合を考える．
+% \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{アルゴリズム}
+\againframe<3|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{アルゴリズム}
+    以下のアルゴリズムを紹介する:
+
+    \begin{itemize}
+        \item 逐次最短路法
+        \item 主双対法
+        \item 容量スケーリング
+    \end{itemize}
+    {\footnotesize cf. 最小重み二部マッチングに対する逐次最短路法・主双対法（第3回）}
+
+    \bigskip
+    \structure{仮定}
+    \begin{itemize}
+        \item $b$, $u$は整数値
+        \item $c$は非負 \\
+        {\footnotesize 例えば，Hitchcock型輸送問題に帰着した後，費用$c' := c + M \ones$ ($M$:十分大) を考えればよい．}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{逐次最短路法}
+    \small
+    \structure{記号} 流$\varphi$に対し，
+    \begin{align*}
+            U^+ &= \{ i \in V : b(i) > (\partial\varphi)(i) \} \quad \dots\dots\text{供給が余っている頂点}  \\
+            U^- &= \{ i \in V : b(i) < (\partial\varphi)(i) \} \quad \dots\dots\text{需要が満たされていない頂点}     
+    \end{align*}
+
+    \begin{block}{逐次最短路法}
+        \begin{algorithmic}[1]
+            \STATE $\varphi \gets 0$ \COMMENT{初期流}
+            \WHILE{$\partial\varphi \neq b$}
+            \IF{残余ネットワーク$G_\varphi$上で$U^+$から$U^-$へ到達可能}
+                \STATE 枝長$\ell_\varphi$に関する$G_\varphi$上の$U^+$--$U^-$最短路$P$を求める \\ \COMMENT{Bellman--Ford法で$O(mn)$時間}
+                \STATE $\eps := \min\{\min_{a \in P} c_\varphi (a), b(s) - \partial\varphi(s), \partial\varphi(t) - b(t)\}$ \quad ({\footnotesize $s, t$: $P$の始点・終点})
+                \STATE $P$に沿って$\varphi$を$\eps$だけ更新する．
+            \ELSE
+                \RETURN "$b$流は存在しない"
+            \ENDIF
+            \ENDWHILE
+            \RETURN $\varphi$
+        \end{algorithmic}
+    \end{block}
+
+\end{frame}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    \small
+    \begin{lemma}
+        逐次最短路法で求まる流を$0 = \varphi_0, \varphi_1, \cdots,\varphi_\mu$とする．このとき，各$k=0, 1, \dots, \mu$に対し，$\varphi_k$は最小費用$b'$流である（{\footnotesize ここで，$b' = \partial \varphi_k$}）．
+    \end{lemma}
+
+\structure{(証明)} 
+$k$に関する帰納法．$k=0$のときは，$c$が非負かつ$\varphi_0 = 0$より，自明に最小費用$0$流． 
+
+\bigskip
+$\varphi$を最小費用$b'$流とし，$G_\varphi$で$U^+$から$U^-$へ到達可能とする．
+
+\bigskip
+\onslide<+->
+\structure{Claim.} $(G_\varphi, \ell_\varphi)$は$U^+$--$U^-$最短路をもつ \\
+\only<+>{\footnotesize \structure{(∵)} 負閉路最適性条件より，$(G_\varphi, \ell_\varphi)$には負閉路が存在しない． \qed}
+
+\bigskip
+\onslide<+->
+$P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする．
+
+\bigskip
+\structure{Claim.} $\varphi^+$は最小費用$b''$流．\\
+\only<+>{\footnotesize \structure{(∵)} $G_{\varphi^+}$に負閉路が存在したと仮定．更新前の$G_\varphi$には負閉路がなかったので，図のような状況．すると，迂回路$P'$は$P$より長さが短いことになり矛盾． \qed}
+\end{frame}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    \small
+    \begin{lemma}
+        逐次最短路法の途中で，$U^+, U^- \neq \emptyset$かつ$G_\varphi$で$U^+$から$U^-$へ到達不能になったとする．このとき，$(G, u)$に$b$流は存在しない．
+    \end{lemma}
+
+    \structure{(証明)} 
+    $X \subseteq V$を$G_\varphi$において$U^+$から到達可能な頂点全体とする．定義から$U^+ \subseteq X \subseteq V \setminus U^-$.
+    このとき，
+    \begin{align*}
+        b(X) 
+        &= b(U^+) + b(X \setminus U^+) \\
+        &> (\partial\varphi)(U^+) + (\partial\varphi)(X \setminus U^+) \\
+        &= (\partial\varphi)(X) \\
+        &= \varphi(\Out_G(X)) - \varphi(\In_G(X)) \\
+        &= u(\Out_G(X)) - 0
+    \end{align*}
+    となり，Galeの定理より$b$流は存在しない．\qed
+\end{frame}
+
+\begin{frame}{逐次最短路法の計算量}
+
+    \structure{計算量解析}
+    \begin{itemize}
+        \item 整数性より，$\varphi$の更新は高々$B$回 \\ 
+        {\footnotesize \hfill ($B := \frac{1}{2} \sum_{i \in V}\abs{b(i)}$ ... 総供給/総需要量) }
+
+        \item 各更新は1回の$(G_\varphi, \ell_\varphi)$上の最短路問題 \\
+        \hfill $\longrightarrow$ Bellman--Ford法で$O(mn)$時間
+    \end{itemize}
+    {\footnotesize \hfill ($n = |V|, m = |A|$)}
+    
+    \begin{theorem}[伊理~(1960)]
+        逐次最短路法は，$O(mnB)$時間で，最小費用$b$流を求めるか，$b$流が存在しないことを判定する．
+    \end{theorem}
+    \hfill \alert{擬多項式時間}
+\end{frame}
+
+\begin{frame}{主双対法}
+    \small
+    流$\varphi$と$(G_\varphi, \ell_\varphi)$のポテンシャル$p$の両方を保持することで，逐次最短路法の計算量を改善できる．
+
+    \begin{definition}[簡約枝長 (復習)]
+        枝長$\ell: A \to \R$のポテンシャル$p: V \to \R$に関する\alert{簡約枝長}$\ell_p: A \to \R$を次のように定める:
+        \begin{align*}
+       \ell_p(a) := \ell(a) + p(i) - p(j) \quad (a = ij \in A) 
+        \end{align*}
+    \end{definition}
+
+    \bigskip
+    \structure{観察}
+    \begin{itemize}
+        \item 
+    任意の$s$--$t$路$P$に対し，
+    \[
+        \ell_p(P) = \ell(P) + p(s) - p(t).
+    \]
+    特に，$\ell_p$に関する$s$--$t$最短路 $\iff$ $\ell$に関する$s$--$t$最短路．
+        \item $\ell_p \geq 0$ \dotfill\alert{Bellman-Ford法ではなくDijkstra法が使える！}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{主双対法}
+    
+    \small
+    \begin{block}{主双対法}
+        \begin{algorithmic}[1]
+            \STATE $\varphi \gets 0$ \COMMENT{初期流}
+            \STATE $p \gets$ $(G, c)$のポテンシャル \COMMENT{初期ポテンシャル．Dijkstra法で$O(m + n \log n)$時間}
+            \WHILE{$U^+, U^- \neq \emptyset$}
+            \IF{残余ネットワーク$G_\varphi$で$U^+$から$U^-$へ到達可能}
+                \STATE 簡約枝長$\ell_{\varphi,p}$に関する$G_\varphi$上の$U^+$--$U^-$最短路$P$と最短路長関数$d$を求める 
+                \COMMENT{Dijkstra法で$O(m + n\log n)$時間}
+                \STATE $\eps := \min\{\min_{a \in P} c_\varphi (a), b(s) - \partial\varphi(s), \partial\varphi(t) - b(t)\}$ \quad ({\footnotesize $s, t$: $P$の始点・終点})
+                \STATE $P$に沿って$\varphi$を$\eps$だけ更新し，ポテンシャルを$p \gets p + d$と更新する．
+            \ELSE
+                \RETURN "$b$流は存在しない"
+            \ENDIF
+            \ENDWHILE
+            \RETURN $\varphi$
+        \end{algorithmic}
+    \end{block}
+\end{frame}
+
+\begin{frame}{主双対法の証明}
+    \small
+    次の補題を示せば，あとは逐次最短路法の定理から従う．
+    
+    \begin{lemma}
+    主双対法における$p$は，常に$(D_\varphi, \ell_\varphi)$上のポテンシャル．
+    \end{lemma}
+    \pause
+    \structure{(証明)} 
+    $p^+ := p + d$とする．{\footnotesize ($d: V \to \R$ ... $(G_\varphi, \ell_{\varphi,p})$上の（$U^+$からの）最短路長関数)}
+
+    \bigskip
+    $d$は$(G_\varphi, \ell_{\varphi,p})$のポテンシャルなので，任意の枝$a = ij \in A_\varphi$に対し，
+    \begin{align*}
+        d(j) - d(i) \leq \ell_{\varphi,p}(a) = \ell_\varphi(a) + p(i) - p(j)
+    \end{align*}
+    が成り立つ．移項すると $p^+(j) - p^+(i) \leq \ell_\varphi(a)$ となり，$p^+$は$(D_\varphi, \ell_\varphi)$のポテンシャルである．
+
+    \pause
+    \bigskip
+    次に，$P$に沿って$\varphi$を更新した後も$p^+$がポテンシャルであることを示す．
+    最短路$P$上の枝$a = ij$では，上の不等式で等号が成立:
+    \begin{align*}
+        d(j) - d(i) = \ell_{\varphi,p}(a) \quad \iff \quad p^+(j) - p^+(i) = \ell_\varphi(a)
+    \end{align*}
+    よって，更新後に生じる$P$の反転枝に関しても，ポテンシャル条件が成立． \qed
+\end{frame}
+
+\begin{frame}{主双対法の計算量}
+    
+    \structure{計算量解析}
+    \begin{itemize}
+        \item 整数性より，$\varphi$の更新は高々$B$回 \\ 
+        {\footnotesize \hfill ($B := \frac{1}{2} \sum_{i \in V}\abs{b(i)}$ ... 総供給/総需要量) }
+
+        \item 各更新は1回の$(G_\varphi, \ell_{\varphi, p})$上の最短路問題 \\
+        \hfill $\longrightarrow$ Dijkstra法で$O(m + n \log n)$時間
+    \end{itemize}
+    {\footnotesize \hfill ($n = |V|, m = |A|$)}
+    
+    \vfill
+    \begin{theorem}[Edmonds--Karp~(1970), 冨澤~(1971)]
+        主双対法は，$O((m + n\log n)B)$時間で，最小費用$b$流を求めるか，$b$流が存在しないことを判定する．
+    \end{theorem}
+    \hfill \alert{擬多項式時間}
+\end{frame}
+
+\begin{frame}{容量スケーリング法}
+    \small
+    逐次最短路法・主双対法の反復回数を$O(B)$→$O(n \log b_{\max})$に改善したもの． \\
+    {\hfill\footnotesize $B = \frac{1}{2} \sum_{i \in V}\abs{b(i)}$, $b_{\max} = \max_{i \in V} \abs{b(i)}$} \\
+    \hfill \alert{弱多項式時間}
+
+    \vfill
+    \structure{追加の仮定} \\
+    $u \equiv +\infty$ （{\footnotesize 例えば，Hitchcock型輸送問題に帰着すればよい}）
+
+    \vfill
+    \bigskip
+    \structure{記号} 
+    \begin{itemize}
+        \item $\Delta \in \Z_{++}$: スケーリングパラメータ
+        \item 流$\varphi$に対し，
+        \begin{align*}
+            U^+_\Delta &:= \{i \in U^+ : b(i) \geq (\partial\varphi)(i) + \Delta \} \subseteq U^+ \\
+            U^-_\Delta &:= \{i \in U^- : b(i) \leq (\partial\varphi)(i) - \Delta \} \subseteq U^-
+        \end{align*}
+        \dotfill $\Delta$以上供給が余っている/需要が満たされていない頂点
+    \end{itemize}
+    整数性より$\Delta = 1$のときは，$(U^+_\Delta, U^-_\Delta) = (U^+, U^-)$.
+\end{frame}
+
+\begin{frame}{容量スケーリング法}
+    \small
+    \begin{block}{}
+        \begin{algorithmic}[1]
+            \STATE $\varphi \gets 0$ \COMMENT{初期流}
+            \STATE $p \gets$ $(G, c)$のポテンシャル \COMMENT{初期ポテンシャル．Dijkstra法で$O(m + n \log n)$時間}
+            \STATE $\Delta \gets 2^{\lceil \log_2 b_{\max} \rceil}$ \COMMENT{初期スケーリングパラメータ}
+            \WHILE{$\Delta \geq 1$}
+            \IF{残余ネットワーク$G_\varphi$で$U^+_\Delta$から$U^-_\Delta$へ到達可能}
+                \STATE 簡約枝長$\ell_{\varphi,p}$に関する$G_\varphi$上の$U^+_\Delta$--$U^-_\Delta$最短路$P$と最短路長関数$d$を求める 
+                \COMMENT{Dijkstra法で$O(m + n\log n)$時間}
+                \STATE $P$に沿って$\varphi$を$\Delta$だけ更新し，ポテンシャルを$p \gets p + d$と更新する．
+            \ELSE
+                \STATE $\Delta \gets \Delta / 2$ \COMMENT{スケーリングパラメータの更新}
+            \ENDIF
+            \ENDWHILE
+            \IF{$\partial \varphi = b$}
+                \RETURN $\varphi$
+            \ELSE
+                \RETURN "$b$流は存在しない"
+            \ENDIF
+        \end{algorithmic}
+    \end{block}
+\end{frame}
+
+\begin{frame}{容量スケーリング法の解析}
+    $\Delta$が一定の間を\alert{$\Delta$フェーズ}と呼ぶ．
+
+    \bigskip
+    \begin{itemize}
+        \setlength{\itemsep}{1em}
+
+        \item $\Delta$フェーズにおける$\varphi(a)$は$\Delta$の倍数． \\
+        {\footnotesize \structure{(∵)} 初期流は$\varphi \equiv 0$より自明．$\Delta$フェーズにおける更新では，毎回$\Delta$だけ増減するのでOK．最後に，$\Delta \rightarrow \Delta/2$フェーズに移行したときも，$\varphi$が$\Delta$の倍数なので，自明に$\Delta/2$の倍数でもあるのでOK．}
+
+        \item $\varphi$は容量制約$0 \leq \varphi \leq u$を満たす． \\
+        {\footnotesize \structure{(∵)} $u \equiv +\infty$より上限は自明．$\varphi(a) > 0$のとき，$\varphi(a)$は$\Delta$の倍数なので，更新で$\Delta$だけ減らしても負にはならない．}
+    \end{itemize}
+    
+
+
+\end{frame}
+
+\begin{frame}[t]{容量スケーリング法の解析}
+    \small 
+    \begin{lemma}
+        各$\Delta$フェーズにおける更新は高々$n$回．
+    \end{lemma}
+
+    \structure{(証明)} $\varphi$を$\Delta$フェーズの開始時の流とする．
+    $X$を$G_\varphi$において$U^+_{2\Delta}$から到達可能な頂点全体とすると，$U^+_{2\Delta} \subseteq X \subseteq V \setminus U^-_{2\Delta}$. また，$u \equiv +\infty$より，$G$に$X$から出る枝は存在しない．
+
+    \pause
+    \bigskip
+    $(s_1, t_1), \dots, (s_k, t_k)$: $\Delta$フェーズ中の更新で使われた$P$の始点・終点（重複を許す）
+    
+    \bigskip
+    \structure{Claim} $\abs{\{\ell : s_\ell \in X, t_\ell \notin X\}} \leq \abs{\{ \ell : s_\ell \notin X, t_\ell \in X\}}$ \\
+    \pause
+    {\footnotesize 
+    \structure{(∵)} $G$に$X$の外に出る枝はないので，$X$から出るパスを使うには，それより前に$X$へ入るパスを使い，$G_\varphi$に$X$から出る枝を逆向き枝として作る必要がある． \qed}
+\end{frame}
+
+\begin{frame}[t]{容量スケーリング法の解析}
+    \small
+    \structure{Claim} $\abs{\{\ell : s_\ell \in X, t_\ell \notin X\}} \leq \abs{\{ \ell : s_\ell \notin X, t_\ell \in X\}}$ 
+
+    \bigskip
+    よって，
+    \begin{align*}
+        k
+        &\leq \abs{\{\ell : s_\ell, t_\ell \in X\}} + 2\abs{\{\ell : s_\ell \notin X, t_\ell \in X\}} + \abs{\{\ell : s_\ell, t_\ell \notin X\}} \\
+        &= \abs{\{\ell: t_\ell \in X\}} + \abs{\{\ell: s_\ell \notin X\}} \\
+        &\leq \abs{X \cap U^-_\Delta} + \abs{U^+_{\Delta} \setminus X} \\
+        &\leq n. \qed
+    \end{align*}
+
+    \pause
+    \begin{theorem}[Edmonds--Karp~(1970)]
+        容量スケーリング法は，$O(n(m + n \log n) \log b_{\max})$時間で，最小費用$b$流を求めるか，$b$流が存在しないことを判定する．
+    \end{theorem}
+    {\footnotesize \hfill ($n = |V|, m = |A|, b_{\max} = \max_{i \in V} \abs{b(i)}$)} \\
+    \hfill \alert{弱多項式時間}
+\end{frame}
+
+
+\begin{frame}{最小費用流: まとめ}
+    \small
+    
+    \structure{まとめ}
+    \begin{itemize}
+        \item 最小費用流問題の定義，Galeの定理，負閉路最適性条件
+        \item 逐次最短路法，主双対法，容量スケーリング法
+    \end{itemize}
+
+    \bigskip
+    \structure{その他のアルゴリズム}
+    \begin{itemize}
+        \item 最小平均閉路消去法 $O(m^3 n^2 \log n)$時間 \alert{強多項式時間} (Goldberg--Tarjan~(\emph{JACM} 1989))
+        \item 費用スケーリング $O(mn \log(n^2/m) \log (nC))$時間  {\hfill\footnotesize $C = \max_{a \in A} \abs{c(a)}$} \\
+        (Goldberg--Tarjan~(\emph{Math of OR} 1990))
+        \item 現在最速 $m^{1 + o(1)}$時間 (\emph{JACM} 2025\footnote{L. Chen, R. Kyng, Y. P. Liu, R. Peng, M. P. Gutenberg, and S. Sachdeva, \textit{``Maximum Flow and Minimum-Cost Flow in Almost-Linear Time''}, \textit{JACM}, 2025.})
+    \end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
