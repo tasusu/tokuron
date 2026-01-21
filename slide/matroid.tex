@@ -1,0 +1,950 @@
+\RequirePackage{plautopatch}
+\documentclass[14pt,aspectratio=169,xcolor=dvipsnames,table,onlytextwidth,dvipdfmx]{beamer}
+\input{macros_ja}
+\csname endofdump\endcsname
+\title{組合せ最適化特論}
+\subtitle{第7回（マトロイド）}
+\author{担当: \textbf{相馬 輔}}
+\date{2026/1/22}
+
+\begin{document}
+\maketitle
+
+\input{flowchart}
+
+\begin{frame}<1>[label=outline]{目次}
+\begin{tikzpicture}
+    \tikzstyle{block} = [rectangle, text width=\textwidth, rounded corners, minimum height=4em]
+    \tikzstyle{line} = [draw, -latex]
+
+    \node[block,alt={<1,3->{fill=cyan!10}{fill=red!10}}] (combopt) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{1. マトロイドとは}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} マトロイドの諸例 \\
+                \structure{・} 独立集合族 \\
+                \structure{・} 基族 \\
+                \structure{・} 階数関数 \\
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-2,4->{fill=cyan!10}{fill=red!10}}, below=.5em of combopt] (LP) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{2. 最小重み独立集合と貪欲法}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 最小重み独立集合問題 \\
+                \structure{・} 貪欲法 \\
+                \structure{・} Kruskalのアルゴリズム
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-3,5->{fill=cyan!10}{fill=red!10}}, below=.5em of LP] {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{3. マトロイド多面体}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 線形不等式系と整数性 \\
+            \end{column}
+        \end{columns}
+    };
+\end{tikzpicture}%
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{マトロイドとは}
+\againframe<2|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{マトロイドとは}
+    \small
+
+    % {\it \alert{マトロイド (matroid)}  (matrix~+~-oid)} \\
+    \begin{block}{マトロイド (matroid; matrix~+~-oid)}
+    Whitney (1935), 中澤(1935), Pauc--Haupt--N\"obeling (1937--1940), Rado (1942) らによって独立に導入された組合せ構造．
+    \end{block}
+
+    \vfill
+    \structure{組合せ最適化におけるマトロイドの重要性}\\
+    基本的な組合せ最適化問題にマトロイド制約を加えることで，非自明な一般化が得られる．
+    \begin{itemize}
+        \item \textbf{二部マッチング $\longrightarrow$ 独立マッチング・マトロイド交差（次回）}
+        \item サイズ制約劣モジュラ最大化 $\longrightarrow$ マトロイド制約劣モジュラ最大化
+        \item 秘書問題 $\longrightarrow$ マトロイド秘書問題
+        \item[] ...
+    \end{itemize}
+\end{frame}
+
+\newcommand{\indepaxiominner}{%
+        \item[(I0)] $\emptyset \in \caI$
+        \item[(I1)] $I \in \caI$, $I' \subseteq I$ $\implies$ $I' \in \caI$
+        \item[(I2)] $I_1, I_2 \in \caI$, $\abs{I_1} < \abs{I_2}$ $\implies$ $\exists e \in I_2 - I_1$~s.t.~$I_1 + e \in \caI$
+}
+\newcommand{\indepaxiom}{%
+    \begin{description}
+        \indepaxiominner
+    \end{description}}
+\begin{frame}{マトロイドの例①（分割マトロイド）}
+    \begin{columns}[T]
+    \begin{column}{.8\textwidth}
+    $E$: 有限集合 \\
+    $(E_1, E_2, E_3)$: $E$の分割 {\footnotesize ※一般に$k$分割でもよい}
+    \[
+        \caI = \{I \subseteq E: \abs{I \cap E_i} \leq 1 \quad (i=1,2,3) \}
+    \]
+    \end{column}
+    \begin{column}{.2\textwidth}
+    \begin{tikzpicture}[yscale=.8]
+                \foreach \y in {0,1,2}{
+                    \node[circle,fill=UniBlue,inner sep=0pt,text width=.8em] at (0,\y) {};
+                    \node[circle,fill=UniPink,inner sep=0pt,text width=.8em] at (1,\y) {};
+                    \node[circle,fill=UniGreen,inner sep=0pt,text width=.8em] at (2,\y) {};
+                }
+                \node[] at (0, 3) {\small $E_1$};
+                \node[] at (1, 3) {\small $E_2$};
+                \node[] at (2, 3) {\small $E_3$};
+                \draw (-.5, -.5) -- (2.5, -.5) -- (2.5, 2.5) -- (-.5, 2.5) -- cycle;
+                \draw[dotted, thick] (0.5, -.5) -- (.5, 2.5);
+                \draw[dotted, thick] (1.5, -.5) -- (1.5, 2.5);
+            \end{tikzpicture}
+    \end{column}
+    \end{columns}
+    
+    \vfill
+    集合族$\caI$は以下の3つの性質を満たす:
+    \begin{block}{}
+    \indepaxiom
+    \end{block}
+    {\footnotesize \hfill ($I_1 + e := I_1 \cup \{e \}$)}
+\end{frame}
+
+\begin{frame}{マトロイドの例②（グラフ的マトロイド）}
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    $G = (V, E)$: 無向グラフ
+    \[
+        \caI = \{I \subseteq E: \text{$I$は森({\footnotesize 閉路を含まない部分グラフ})}\}
+    \]
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \footnotesize
+        \centering
+        \tikz{\graph[mygraph,clockwise]{
+        Petersen;
+        {[edges={mypath}] 
+            (A 1) -- (A 2) -- (A 3) -- (A 4) -- (A 5);
+            (A 3) -- (B 3);
+            (B 4) -- (B 2) -- (B 5);
+        }
+        };
+        } \\ 森の例
+    \end{column}
+    \end{columns}
+    \begin{lemma}
+    集合族$\caI$は以下の3つの性質を満たす:
+    \indepaxiom
+    \end{lemma}
+\end{frame}
+
+\newcommand{\indepaxiompostit}{%
+    \postit{\footnotesize
+    \begin{minipage}{0.4\textwidth}
+        \begin{description}
+        \setlength{\itemindent}{-40pt}
+        \setlength{\itemsep}{0pt}
+        \indepaxiominner
+        \end{description}
+    \end{minipage}}
+}
+
+% \begin{frame}{補題の証明}
+%     \indepaxiompostit 
+
+%     \structure{(証明)} 
+%     (I0), (I1)は自明．\\ 
+%     (I2): 一般に，$n$頂点の木は$n-1$本の枝を持つことに注意．
+
+%     森$I_1$, $I_2$ ($\abs{I_1} < \abs{I_2}$)を取る．もし，$I_2$の頂点のうち，$I_1$に含まれない頂点$v$が存在すれば，$v$に接続する$I_2$の枝を$e$とすると，$I_1 + e$は森である．
+%     \qed
+% \end{frame}
+
+\begin{frame}{マトロイドの例③（線形マトロイド）}
+    % $v_1, \dots, v_n \subseteq \mathbb{F}^d$: ベクトル空間の元\\
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    $A$: {\footnotesize （体$\mathbb{F}$上の）}$r \times n$行列 \\ 
+    $E = \{1, \dots, n\}$
+    \[
+        \caI = \{I \subseteq E: \text{列部分行列$A[I]$の列は一次独立}\}
+    \]
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \coordinate (O) at (0,0);
+            \coordinate (A) at (4,0);
+            \coordinate (B) at (0,2);
+            \coordinate (Il) at ($(B)!0.2!(A |- B)$);
+            \coordinate (Ir) at ($(B)!0.6!(A |- B)$);
+            \begin{scope}[on background layer]
+                \path[fill=AlertOrange!10] (Il) rectangle (Ir |- O);
+                \draw[rectangle, thick] (O) rectangle (A |- B);
+            \end{scope}
+            \draw[mypath, <->, AlertOrange] (Il) -- (Ir) node[midway, above] {\small $I$};
+            \node[AlertOrange] at ($(Il)!0.5!(Ir |- A)$) {\small $A[I]$};
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+
+    \begin{lemma}
+    集合族$\caI$は以下の3つの性質を満たす:
+    \indepaxiom
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{補題の証明}
+    \indepaxiompostit 
+
+    \structure{(証明)} 
+    \textbf{(I0), (I1):} 定義から自明． 
+
+    \bigskip
+    \textbf{(I2):} 独立集合$I_1$, $I_2$ ($\abs{I_1} < \abs{I_2}$)を取る．
+    
+    \bigskip
+    \structure{Claim.} $A[I_2]$の列のうち，$A[I_1]$の列が張る部分空間に含まれないものが存在する．\\
+    {\small \structure{(∵)} $A[I_1]$, $A[I_2]$の列の張る部分空間をそれぞれ$W_1, W_2$とすると，$\dim W_1 = \abs{I_1} < \abs{I_2} = \dim W_2$であるから．}
+    
+    \bigskip
+    そのような列の添字を$e \in I_2 - I_1$とすると，$I_1 + e$は独立集合．\qed
+\end{frame}
+
+\begin{frame}{分割マトロイド$\subset$線形マトロイド}
+
+    \begin{columns}[T]
+    \begin{column}{.8\textwidth}
+    $E$: 有限集合 \\
+    $(E_1, E_2, E_3)$: $E$の分割 {\footnotesize ※一般に$k$分割でもよい} \\
+    に対して，行列
+    \begin{align*}
+        A = \begin{bNiceArray}{ccc|ccc|ccc}[first-row]
+        \Block{1-3}{E_1} &&& \Block{1-3}{E_2} &&& \Block{1-3}{E_3} \\
+        1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+        \end{bNiceArray}
+    \end{align*}
+    を考えると，$A$が定める線形マトロイドの独立集合族は分割マトロイドの独立集合族に一致する．
+    \end{column}
+    \begin{column}{.2\textwidth}
+    \begin{tikzpicture}[yscale=.8]
+                \foreach \y in {0,1,2}{
+                    \node[circle,fill=UniBlue,inner sep=0pt,text width=.8em] at (0,\y) {};
+                    \node[circle,fill=UniPink,inner sep=0pt,text width=.8em] at (1,\y) {};
+                    \node[circle,fill=UniGreen,inner sep=0pt,text width=.8em] at (2,\y) {};
+                }
+                \node[] at (0, 3) {\small $E_1$};
+                \node[] at (1, 3) {\small $E_2$};
+                \node[] at (2, 3) {\small $E_3$};
+                \draw (-.5, -.5) -- (2.5, -.5) -- (2.5, 2.5) -- (-.5, 2.5) -- cycle;
+                \draw[dotted, thick] (0.5, -.5) -- (.5, 2.5);
+                \draw[dotted, thick] (1.5, -.5) -- (1.5, 2.5);
+            \end{tikzpicture}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{グラフ的マトロイド$\subset$線形マトロイド}
+    \small
+
+    \bigskip
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \structure{ネットワーク行列 (復習)} 有向グラフ$G = (V, A)$に対し，\\ 
+    $V \times A$行列$B$を
+    \[
+        B_{i,a} := \begin{cases}
+            +1 & \text{($i$は$a$の始点)} \\
+            -1 & \text{($i$は$a$の終点)} \\
+            0  & \text{otherwise}
+        \end{cases} 
+    \]
+    $(i \in V, a \in A)$と定める．
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \graph[mygraph, math nodes, grow right=1.4cm, branch down=1.4cm]{
+            a -> b;
+            c -> d;
+            a -> {c, d};
+            b -> d;
+        };
+        \end{tikzpicture}
+        \footnotesize
+        \[
+            B = \begin{bmatrix}
+            +1 & +1 & +1 & 0 & 0 \\
+            -1 & 0 & 0 & +1 & 0 \\
+            0 & -1 & 0 & 0 & +1 \\
+            0 & 0 & -1 & -1 & -1
+            \end{bmatrix}
+        \]
+    \end{column}
+    \end{columns}
+
+    \vfill
+    \begin{lemma}
+        無向グラフ$G = (V, E)$の枝を任意に向き付けた有向グラフを考え，そのネットワーク行列を$B$とする．
+        このとき，
+        $B[I]$の列は一次独立 $\iff$ $I$は$G$の森
+        % 無向グラフ$G$が定めるグラフ的マトロイドと，ネットワーク行列$B$が定める線形マトロイドは一致する．
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{マトロイドの定義（独立集合族）}
+    \begin{definition}
+        $E$: 有限集合, $\caI \subseteq 2^E$: 部分集合族 \\
+        $\bM = (E, \caI)$が\alert{マトロイド} $\defiff$
+        \indepaxiom
+    
+        \bigskip
+        特に，$I \in \caI$を\alert{独立集合 (independent set)}といい，$\caI$を\alert{独立集合族}という．
+        また，$E$をマトロイドの\alert{台集合 (ground set)}という．
+    \end{definition}
+
+
+    \tikz[overlay, remember picture]{
+        \node[nomargin] at ([xshift=-2.5cm, yshift=1.1cm]current page.east) {
+        \tikz{
+            \node[circle, fill=UniBlue, opacity=.3, minimum size=1.5cm] (B1) at (0,0) {};
+            \node[circle, fill=AlertOrange, opacity=.3, minimum size=2cm] (B2) at (1,0) {};
+            \node[point,fill=AlertOrange,"$e$" above] (j) at ([xshift=+.4cm] B2.base) {};
+            \node[UniBlue, above=1pt of B1, xshift=-.4cm] {$I_1$};
+            \node[AlertOrange, above=1pt of B2, xshift=+.4cm] {$I_2$};
+        }
+            };
+    }
+\end{frame}
+
+\begin{frame}{基族}
+    $\bM = (E, \caI)$: マトロイド
+    \begin{definition}
+    \begin{itemize}
+        \item 独立集合$I$が\alert{極大 (maximal)} $\defiff$ $I$を真に含む独立集合が存在しない
+        \item  極大な独立集合を$\bM$の\alert{基 (base)}といい，基の全体を\alert{基族 (base family)}という．        
+    \end{itemize}
+    \end{definition}
+
+    \bigskip
+    \small
+    \structure{例}
+    \begin{itemize}
+        \item 分割マトロイドの基族: 各分割ブロック$E_i$から要素を1つずつ含む集合
+        \item グラフ的マトロイドの基族: グラフが連結であるとすると，基はグラフの\alert{全域木 (spanning tree)}
+        % \item 線形マトロイドの基族: 
+    \end{itemize}
+\end{frame}
+    
+\begin{frame}{基族}
+    \bigskip
+    $\caB$をマトロイドの基族とする．
+    \begin{lemma}
+        $B_1, B_2 \in \caB \implies \abs{B_1} = \abs{B_2}$
+    \end{lemma}
+    \pause
+    {\small 
+    \structure{(証明)}
+    背理法．$\abs{B_1} < \abs{B_2}$とする．
+    $B_1, B_2$は独立集合なので，公理(I2)より，ある$e \in B_2 - B_1$で$B_1 + e \in \caI$となるものが存在．これは$B_1$の極大性に反する． \qed
+    }
+
+    \pause
+    \bigskip
+    基の大きさをマトロイド$\bM$の\alert{階数 (rank)}といい，$r(\bM)$で表す．
+    \begin{lemma}
+        $I \in \caI$, $\abs{I} = r(\bM)$ $\implies$ $I$は基．
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{基族}
+    \begin{columns}[T]
+    \begin{column}{.75\textwidth}
+    \begin{theorem}
+        マトロイドの基族$\caB$に対し，次が成り立つ:
+    \begin{description}
+        \item[(B1)] $\caB \neq \emptyset$
+        \item[(B2)] $B_1, B_2 \in \caB$, $B_1 \neq B_2$, $i \in B_1 - B_2$ \\ 
+        $\implies \exists j \in B_2 - B_1$~s.t.~$B_1 - i + j \in \caB$.
+    \end{description}
+    \end{theorem}
+    \end{column}
+    \begin{column}{.25\textwidth}
+        \centering
+           \vspace{1em}
+           \begin{tikzpicture}
+            %    \path[fill=UniBlue, opacity=.3] (0,0) circle[radius=1];
+            %    \path[fill=AlertOrange, opacity=.3] (1,0) circle[radius=1];
+               \node[circle, fill=UniBlue, opacity=.3, minimum size=2cm] (B1) at (0,0) {};
+               \node[circle, fill=AlertOrange, opacity=.3, minimum size=2cm] (B2) at (1,0) {};
+               \node[point,fill=UniBlue,"$i$" left] (i) at ([xshift=-.4cm] B1.base) {};
+               \node[point,fill=AlertOrange,"$j$" right] (j) at ([xshift=+.4cm] B2.base) {};
+               \node[UniBlue, above=1pt of B1, xshift=-.4cm] {$B_1$};
+               \node[AlertOrange, above=1pt of B2, xshift=+.4cm] {$B_2$};
+           \end{tikzpicture} 
+    \end{column}
+    \end{columns}
+
+    \vfill
+    \small
+    \pause
+    \structure{(証明)} \\
+    \textbf{(B1):} 公理(I0) $\emptyset \in \caI$より，少なくとも1つは基が存在する．
+
+    \smallskip
+    \textbf{(B2):} $B_1 - i$と$B_2$は独立集合で，$\abs{B_1 - i} = \abs{B_1} - 1 < \abs{B_2}$．よって，公理(I2)より，ある$j \in B_2 - (B_1 - i) = B_2 - B_1$で$(B_1 - i) + j \in \caI$となるものが存在．$\abs{B_1 - i + j} = \abs{B_1}$なので，補題よりこれは基．\qed
+\end{frame}
+
+\begin{frame}{基族}
+    実は，基族の性質(B1), (B2)からマトロイドを定義することもできる．
+
+    \begin{lemma}[cf.~\mycite{Ch.~14, Korte--Vygen (2018)}]
+        $\caB \subseteq 2^E$を(B1), (B2)を満たす集合族とする．このとき，
+        \[ 
+            \caI := \{ I \subseteq E: \text{$I$はある$B \in \caB$に含まれる} \}
+        \]
+        とすると，$\caI$は独立集合族である．
+    \end{lemma}
+
+    すなわち，(B1), (B2)もマトロイドの公理系である．
+\end{frame}
+
+\begin{frame}{階数関数}
+    $\bM = (E, \caI)$: マトロイド
+    \begin{definition}
+        \begin{itemize}
+            \item $X \subseteq E$に対し，$X$に含まれる最大の独立集合の大きさを$X$の\alert{階数 (rank)}といい，$r(X)$で表す．
+            \item $r: X \mapsto r(X)$を\alert{階数関数 (rank function)}という．
+        \end{itemize}
+        % $\bM$の\alert{階数関数 (rank function)} $r: 2^V \to \Z_+$を次のように定める:
+        % \[
+        %     r(X) := \max\{\abs{B \cap X}: B \in \caB \}
+        %     \qquad \text{\small $X$に含まれる最大の独立集合の大きさ}
+        % \]
+    \end{definition}
+
+    \pause
+    \bigskip
+    \structure{例}
+    \begin{itemize}
+        \item 分割マトロイド: $r(X) = \abs{\{i: E_i \cap X \neq \emptyset\}}$
+        \item グラフ的マトロイド: $r(X) = \abs{V(G[X])} - \text{($G[X]$の連結成分数)}$ \\ 
+              {\footnotesize \hfill ($G[X]$: $X$の誘導部分グラフ)}
+        \item 線形マトロイド: $r(X) = \dim\mathrm{span}\{\text{$A[X]$の列ベクトル}\}$
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{階数関数の性質}
+    \begin{theorem}
+        マトロイドの階数関数$r$は次の性質を満たす:
+        \begin{description}
+            \item[(R1)] $0 \leq r(X) \leq \abs{X}$ \quad ($X \subseteq E$) 
+            \item[(R2)] $r(X) \leq r(Y)$ \quad ($X \subseteq Y \subseteq E$) \hfill \alert{単調性}
+            \item[(R3)] $r(X) + r(Y) \geq r(X \cup Y) + r(X \cap Y)$ \quad ($X, Y \subseteq E$) \\ \hfill\alert{劣モジュラ性}
+        \end{description}
+    \end{theorem}
+
+    \vfill
+    \small
+    実は，(R1)--(R3)もマトロイドの公理系となる．
+    \begin{theorem}[cf.~\mycite{Ch.~14, Korte--Vygen (2018)}]
+        (R1)--(R3)を満たす集合関数$r: 2^E \to \Z_+$に対し，
+        \setlength{\abovedisplayskip}{1pt}
+        \setlength{\belowdisplayskip}{1pt}
+        \[
+            \caI = \{X \subseteq E: \abs{X} = r(X) \} 
+        \]
+        はマトロイドの独立集合族．
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{定理の証明}
+    \postit{\begin{minipage}{.6\textwidth}\footnotesize 
+        \begin{description}
+        \setlength{\itemindent}{-35pt}
+        \setlength{\leftmargin}{0pt}
+        \setlength{\itemsep}{0pt}
+            \item[(R1)] $0 \leq r(X) \leq \abs{X}$
+            \item[(R2)] $r(X) \leq r(Y)$ \quad ($X \subseteq Y \subseteq E$) 
+            \item[(R3)] $r(X) + r(Y) \geq r(X \cup Y) + r(X \cap Y)$ \quad ($X, Y \subseteq E$) 
+        \end{description}
+    \end{minipage}}
+
+    \small
+    \structure{(証明)} \textbf{(R1), (R2):} 定義から自明．  
+
+    \begin{columns}[T]
+    \begin{column}{.8\textwidth}
+    \textbf{(R3):} $I_{X\cap Y}$を$X\cap Y$の最大独立集合とする．
+    公理(I2)より，$I_{X \cap Y}$に$X \cup Y$の要素を加えて，$X \cup Y$の最大独立集合$I_{X \cup Y}$を作れる．
+    
+    % \begin{align*}
+    %     I_{X\cap Y} = I_{X\cup Y} \cap (X \cap Y)
+    %     % , \quad
+    %     % I_{X\cup Y} = B^* \cap (X \cup Y)
+    % \end{align*}
+    このとき，
+    \begin{itemize}
+        \item $I_{X\cap Y} = I_{X\cup Y} \cap (X \cap Y)$
+        \item $I_{X \cup Y} \cap X$は$X$の独立集合，$I_{X \cup Y} \cap Y$は$Y$の独立集合．
+    \end{itemize}
+    \end{column}
+    \begin{column}{.2\textwidth}
+        \centering
+           \begin{tikzpicture}
+               \node[circle, fill=UniBlue, opacity=.3, minimum size=2cm] (B1) at (0,0) {};
+               \node[circle, fill=AlertOrange, opacity=.3, minimum size=2cm] (B2) at (1,0) {};
+               \node[UniBlue, above=1pt of B1, xshift=-.4cm] {$X$};
+               \node[AlertOrange, above=1pt of B2, xshift=+.4cm] {$Y$};
+               \node at ($(B1)!0.5!(B2)$) {\footnotesize $X \cap Y$};
+           \end{tikzpicture} 
+    \end{column}
+    \end{columns}
+
+    \bigskip
+    よって，
+    \begin{align*}
+        r(X) + r(Y) 
+        &\geq |I_{X \cup Y} \cap X| + |I_{X \cup Y} \cap Y| \\
+        &= |I_{X \cup Y} \cap (X \cup Y) | + |I_{X \cup Y} \cap (X \cap Y)| \\
+        &= |I_{X \cup Y}| + |I_{X \cap Y}| \\
+        &= r(X \cup Y) + r(X \cap Y) \qed
+    \end{align*}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{最小重み独立集合と貪欲法}
+\againframe<3|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{最小重み独立集合問題}
+    \begin{itemize}
+        \item $E$上のマトロイド$\bM = (E, \caI)$ %\quad ($\caB$: $\bM$の基族) 
+        \item 台集合上の重み$w(e) \in \R$ ($e \in E$) 
+        \item 非負整数$0 \leq k \leq r(\bM)$
+    \end{itemize}
+    
+    \vfill
+    \begin{block}{最小重み独立集合問題 (Minimum Weight Independent Set Problem)}
+        \[
+           \text{minimize} \quad w(I) \quad\text{s.t.}\quad I \in \caI, \abs{I} = k
+        \]
+    \end{block}
+
+    \vfill
+    \structure{この節の目標:} 最小重み独立集合問題は\alert{貪欲法 (greedy algorithm)}で解けることを示す．
+\end{frame}
+
+\begin{frame}{例：最小重み全域木問題}
+
+    \begin{columns}[T]
+        \begin{column}{.7\textwidth}
+    $G = (V, E)$: 連結無向グラフ, \\ 
+    $w(e) \in \R$ ($e \in E$): 枝重み
+    \begin{block}{最小重み全域木問題 (Minimum Weight Spanning Tree Problem)}
+        \[
+           \text{minimize} \quad w(T) \quad\text{s.t.}\quad \text{$T$は$G$の全域木} 
+        \]
+    \end{block} 
+        \end{column}
+    \begin{column}{.2\textwidth}
+        \centering
+        \tikz{\graph[mygraph,clockwise]{
+        Petersen;
+        {[edges={mypath}] 
+            (A 1) -- (A 2) -- (A 3) -- (A 4) -- (A 5);
+            (A 3) -- (B 3) -- {(B 1), (B 5)} ;
+            (A 4) -- (B 4) -- (B 2);
+        }
+        };
+        } \\ 全域木の例
+    \end{column}
+    \end{columns}
+
+    これは
+    \begin{itemize}
+        \item $\bM =$ $G$のグラフ的マトロイド
+        \item $k = |V| - 1 = r(\bM)$
+    \end{itemize}
+    に対する最小重み独立集合問題．
+\end{frame}
+
+\begin{frame}<1,8>[label=MST]
+    \frametitle{}
+
+    \begin{center}
+        \tikz[scale=2]{
+            \begin{scope}[every node/.style={inner sep=0pt}]
+            \node(a) at (0, 0) {\coloremojicode[scale=2.5]{computer}};
+            \node(b) at (1, 1) {\coloremojicode[scale=2.5]{computer}};
+            \node(c) at (3, 1) {\coloremojicode[scale=2.5]{computer}};
+            \node(d) at (5, 1) {\coloremojicode[scale=2.5]{computer}};
+            \node(e) at (6, 0) {\coloremojicode[scale=2.5]{computer}};
+            \node(f) at (5,-1) {\coloremojicode[scale=2.5]{computer}};
+            \node(g) at (3,-1) {\coloremojicode[scale=2.5]{computer}};
+            \node(h) at (1,-1) {\coloremojicode[scale=2.5]{computer}};
+            \node(i) at (2, 0) {\coloremojicode[scale=2.5]{computer}};
+            % fire
+            \node<9-> at (c) {\coloremojicode[scale=2.5]{fire}};
+            \end{scope}
+            \foreach \i/\j/\w/\pos in {a/b/4/above, b/c/8/above, c/d/7/above, d/e/9/above, e/f/10/below, f/g/2/below, g/h/1/below, h/a/8/below, b/h/11/left, h/i/7/above, i/c/2/below, i/g/6/below, c/f/4/below, d/f/14/right}{
+                  \draw[myedges] (\i) edge ["{$\w$}" \pos] (\j);
+            }
+
+            \begin{scope}[every path/.style={mypath}]
+                \path<2-> (h) -- (g);
+                \path<3-> (g) -- (f);
+                \path<4-> (i) -- (c);
+                \path<5-> (a) -- (b);
+                \path<6-> (c) -- (f);
+                \path<7-> (c) -- (d);
+                \path<8-> (c) -- (d) -- (e) (a) -- (h);
+            \end{scope}
+
+        }
+    \end{center}
+\end{frame}
+
+\begin{frame}{貪欲法}
+
+    \begin{block}{}
+    \begin{algorithmic}[1]
+        \STATE $X_0 := \emptyset$, $k := 0$.
+        \STATE $E$の要素を$w$の昇順に並べる: $w(e_1) \leq \dots \leq w(e_n)$ ($n = \abs{E}$).
+        \FOR{$i = 1, \dots, n$}
+            \STATE $X_k + e_i \in \caI$ならば$e_i$を$X_k$に追加し，$k \gets k + 1$とする． \\
+            {\color{gray} \dotfill $X_k$は大きさ$k$の独立集合}
+        \ENDFOR
+    \end{algorithmic}
+    \end{block}
+
+    \vfill
+    \begin{theorem}
+        $k = 0, 1, \dots, r(\bM)$に対し，$X_k$が存在し，$X_k$は大きさ$k$の独立集合のうち最小重みである．
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{Kruskalのアルゴリズム}
+    特に最小重み全域木問題に適用したものは\alert{Kruskalのアルゴリズム}と呼ばれる．
+    
+    \begin{block}{}
+    \begin{algorithmic}[1]
+        \STATE $X := \emptyset$.
+        \STATE 枝を$w$の昇順に並べる: $w(e_1) \leq \dots \leq w(e_m)$ ($m = \abs{E}$).
+        \FOR{$i = 1, \dots, m$}
+            \STATE $X + e_i$が閉路を含まないならば$e_i$を$X$に追加する．
+        \ENDFOR
+        \RETURN $X$
+    \end{algorithmic}
+    \end{block}
+
+    \vfill
+    \begin{corollary}
+        $X$は最小重み全域木である．
+    \end{corollary}
+\end{frame}
+
+\againframe<1-8>{MST}
+
+\begin{frame}{定理の証明}
+    \small
+    \begin{lemma}
+        貪欲法の任意の時点を考え，そのときの暫定解$X$とする．
+        このとき，\\ $e \notin X$, $X + e \in \caI \implies$ $e$はまだ調べていない要素．
+    \end{lemma}
+    \pause
+    \structure{(証明)} 
+    $e$は既に調べた要素だと仮定する．
+    $e$を調べたときの暫定解を$X' \subseteq X$とすると，$X' + e \subseteq X + e \in \caI$より，$X' + e \in \caI$.
+    よって，貪欲法は$e$を$X'$に追加したことになり，$e \in X$となって矛盾．\qed
+
+    \vfill
+    \pause
+    \begin{lemma}
+        $k = 0, 1, \dots, r(\bM)$に対し，$X_k$が存在する．
+    \end{lemma}
+    \pause
+    \structure{(証明)} $k < r(\bM)$とし，$X_k$が存在すると仮定する．
+    % $B$を$X_k$を含む基とする．
+    $k = \abs{X_k} < r(\bM)$より，$X_k$は基ではないから，$e \notin X_k$で$X_k + e \in \caI$となるものが存在．
+
+    \pause
+    前補題より，$e$は$X_k$が定義された時点で，まだ調べていない要素である．
+    よって，少なくとも1つは$X_k$に追加できる要素がまだ残っているので，$X_{k+1}$が定義される． \qed
+\end{frame}
+
+\begin{frame}{定理の証明}
+    \small
+    \begin{lemma}
+        $k = 0, 1, \dots, r(\bM)$に対し，$X_k$は大きさ$k$の最小重み独立集合．
+    \end{lemma}
+
+    \pause
+    \structure{(証明)}
+    背理法．$X_k$より真に重みの小さい大きさ$k$の独立集合$Y$が存在すると仮定．
+    \begin{alignat*}{2}
+    X_k &= \{x_1, \dots, x_k\} &\quad& (w(x_1) \leq \dots \leq w(x_k)) \\
+    Y   &= \{y_1, \dots, y_k\} &\quad& (w(y_1) \leq \dots \leq w(y_k)) 
+    \end{alignat*}
+    とする．
+
+    \bigskip
+    $w(Y) < w(X_k)$より，ある$1 \leq i \leq k$で$w(y_i) < w(x_i)$が成り立つ．
+    % そのような$i$のうち最小のものを取る．
+    
+    \begin{center}
+        \begin{tikzpicture}
+            \matrix (m) [matrix of nodes, ampersand replacement=\&]{
+                $x_1$ \& $\leq\dots\leq$ \& $x_{i-1}$ \& $\leq$ \& $x_i$ \& $\leq\dots\leq$ \& $x_k$ \\[1em]
+                $y_1$ \& $\leq\dots\leq$ \& $y_{i-1}$ \& $\leq$ \& $y_i$ \& $\leq\dots\leq$ \& $y_k$ \\
+            };
+            \node[AlertOrange, rotate=90] at ($(m-1-5)!0.5!(m-2-5)$) {$<$};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+
+\begin{frame}{定理の証明（続き）}
+    \small
+    \begin{center}
+        \begin{tikzpicture}
+            \matrix (m) [matrix of nodes, ampersand replacement=\&]{
+                $x_1$ \& $\leq\dots\leq$ \& $x_{i-1}$ \& $\leq$ \& $x_i$ \& $\leq\dots\leq$ \& $x_k$ \\[1em]
+                $y_1$ \& $\leq\dots\leq$ \& $y_{i-1}$ \& $\leq$ \& $y_i$ \& $\leq\dots\leq$ \& $y_k$ \\
+            };
+            \node[AlertOrange, rotate=90] at ($(m-1-5)!0.5!(m-2-5)$) {$<$};
+
+            \begin{scope}[on background layer]
+                \node[fit=(m-1-1)(m-1-3), mysubset, "{$X_{i-1}$}" {left, UniBlue}] {};
+                \node[fit=(m-2-1)(m-2-5), mysubset, AlertOrange, fill=AlertOrange!10, "{$Y_i$}" {left, AlertOrange}] {};
+            \end{scope}
+        \end{tikzpicture}
+    \end{center}
+
+    \newcommand{\Xmi}{\textcolor{UniBlue}{X_{i-1}}}
+    \newcommand{\Yi}{\textcolor{AlertOrange}{Y_i}}
+    独立集合$\Xmi$と$\Yi$に公理(I2)を適用すると，ある$y \in \Yi - \Xmi$で$\Xmi + y \in \caI$となるものが存在する．
+    
+    \bigskip
+    補題より，$y$は$x_i$を調べる時点（暫定解$X_{i-1}$）でまだ調べられていないので，$w(y) \geq w(x_i)$が成立．一方，$w(y) \leq w(y_i) \textcolor{AlertOrange}{{}<{}} w(x_i)$なので，矛盾．\qed
+    % \bigskip
+    % $y$を調べたときの暫定解を$X' \subseteq \Xmi$とすると，$X' + y \subseteq \Xmi + y \in \caI$であるから，公理(I1)より$X' + y \in \caI$. よって，貪欲法は$y$を$X'$に追加する．ところが，これは$y \in \Xmi$を意味するので，矛盾．\qed
+\end{frame}
+
+\begin{frame}{貪欲法の計算量}
+    \small
+    一般に，マトロイド$\bM = (E, \caI)$は$|E|$に対し指数個の独立集合を持つため，独立集合の一覧をアルゴリズムに入力することはできない．
+
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \begin{block}{独立性オラクル}
+        部分集合$X \subseteq E$を入力すると，$X$が独立集合か否かを返してくれるオラクル
+    \end{block}
+    \end{column}
+    \begin{column}{.29\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[](alg){\coloremoji[scale=2]{🖥️}};
+            \node[right=2.5cm of alg](ora){\coloremoji[scale=2]{🧙‍♀️}};
+            \draw[myedges, ->] (alg) -- node[above]{\footnotesize $X \in \caI$か?} (ora);
+            \draw[myedges, ->] ([yshift=-5pt]ora.west) -- node[below]{\footnotesize YES/NO} ([yshift=-5pt]alg.east);
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+    \smallskip
+    具体的なマトロイド（グラフ的マトロイドや線形マトロイドなど）では，グラフの操作や行列計算により多項式時間で実装できる．
+
+    \pause
+    \bigskip
+    \begin{theorem}
+        貪欲法は$O(n \log n + n \mathrm{IO})$時間で最小重み独立集合を求める．ただし，$n = |E|$，$\mathrm{IO}$は独立性オラクルの計算時間．
+    \end{theorem}
+\end{frame}
+
+% \begin{frame}{貪欲法によるマトロイドの特徴づけ}
+%     実は「マトロイド $=$ 貪欲法で最小重み問題が解ける集合族」である．
+
+%     \begin{definition}
+%         集合族$\caI \subseteq 2^V$が\alert{独立性システム (independence system)} $\defiff$ 
+%         \begin{description}
+%             \item[(I0)] $\emptyset \in \caI$
+%             \item[(I1)] $I \in \caI$, $I' \subseteq I$ $\implies$ $I' \in \caI$
+%         \end{description}
+%     \end{definition}
+
+%     \begin{theorem}[Rado (1957), Edmonds (1971)]
+%         独立性システム$\caI$に対し，以下は同値:
+%         \begin{enumerate}
+%             \item $\bM = (V, \caI)$はマトロイド．
+%             \item 任意の重み関数$w: V \to \R$に対し，貪欲法は$\caI$の最小重み集合を返す．
+%         \end{enumerate}
+%     \end{theorem}
+% \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{マトロイド多面体}
+\againframe<4|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{マトロイド多面体}
+    \begin{definition}
+        マトロイド$\bM$の\alert{マトロイド多面体 (matroid polytope)}を次で定める:
+        \[
+            P(\bM) := \conv\{\ones_I: I \in \caI \} \subseteq \R^E
+        \]
+        {\footnotesize \hfill ($\ones_I \in \{0,1\}^E$: $I$の特性ベクトル)}
+    \end{definition}
+
+    \bigskip
+    \structure{この節の目標}
+    \begin{theorem}[Edmonds (1970)]
+        \[
+            P(\bM) = \{x \in \R^E: x(X) \leq r_{\bM}(X) \quad (X \subseteq E), \; x \geq 0 \}
+        \]
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{マトロイド多面体の例}
+   
+    \small
+    \begin{example}[分割マトロイド]
+        分割$(E_1, E_2, \dots, E_k)$に対する分割マトロイドのマトロイド多面体は次で表される:
+        \begin{alignat*}{2}
+            x(E_i \cap X) &\leq \abs{E_i \cap X} &\quad (X \subseteq E, i = 1, \dots, k)\\
+            x &\geq 0 &
+        \end{alignat*}
+    \end{example}
+    
+    \begin{example}[グラフ的マトロイド]
+        連結な無向グラフ$G = (V, E)$に対するグラフ的マトロイドのマトロイド多面体は次で表される:
+        \begin{alignat*}{2}
+            x(X) &\leq \abs{V(G[X])} - c(G[X]) &\quad (X \subseteq E)\\
+            x &\geq 0 &
+        \end{alignat*}
+        {\footnotesize \hfill ($G[X]$: $X$の誘導部分グラフ, $c(G[X])$: $G[X]$の連結成分数)}
+    \end{example}
+\end{frame}
+
+\begin{frame}{定理の証明 (1/4)}
+    $P := \{x \in \R^E: x(X) \leq r_{\bM}(X) \quad (\forall X \subseteq E), \quad x \geq 0 \}$とする．
+
+    \bigskip
+    \structure{$P \subseteq P(\bM)$であること:}
+    $I \in \caI$を独立集合とし，$x = \ones_I$を特性ベクトルとする．任意の部分集合$X \subseteq V$に対し，
+    \begin{align*}
+        x(X) = |I \cap X| \leq r_{\bM}(X). \tag{$I \cap X \subseteq X$は独立集合より}
+    \end{align*}
+    ∴$x \in P$. $P$は凸多面体なので，$P(\bM) \subseteq P$.
+\end{frame}
+
+\begin{frame}{定理の証明 (2/4)}
+    \small
+    \structure{$P(\bM) \subseteq P$であること:} 任意の$w \in \R^E$に対し，$\max_{x \in P} w^\top x$を達成する点が$P(\bM)$に存在することを示す．
+
+    \bigskip
+    $w$を重みとする最大重み独立集合問題を考える:
+    \begin{block}{}
+        \[
+            \text{maximize} \quad w(I) \quad\text{s.t.}\quad I \in \caI 
+        \]
+    \end{block}
+   
+    \bigskip
+    重みを降順に並べて，
+    \[  
+        w(e_1) \geq w(e_2) \geq \dots \geq w(e_k) \geq 0 > w(e_{k+1}) \geq \dots \geq w(e_n)
+    \]
+    とすると，$e_1, \dots, e_k$まで貪欲法を走らせた暫定解が最適解である．それを
+    \[
+        I = \{e_{i_1}, e_{i_2}, \dots, e_{i_\ell}\} \quad (1 \leq i_1 < i_2 < \dots < i_\ell \leq k) 
+    \]
+    とおく．$x = \ones_I \in P(\bM)$が$\max_{x \in P} w^\top x$の最適解であることを示せば良い．
+\end{frame}
+
+\begin{frame}{定理の証明 (3/4)}
+    \footnotesize
+    \begin{primal}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{3}
+            \text{max}   \quad & \sum_{e \in E} w(e)x(e) && \quad \\
+            \text{s.t.}  \quad & \sum_{e \in X} x(e)  \leq r(X) && \quad (X \subseteq E) \\
+                         \quad & x(e) \geq 0 && \quad (e \in E)
+        \end{alignat*}
+    \end{primal}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{3}
+            \text{min}  \quad & \sum_{X \subseteq E} r(X) y_X && \\
+            \text{s.t.} \quad & \sum_{X \in e} y_X \geq w(e)  &&\quad && (e \in E) \\
+                         \quad & y_X  \geq 0                  &&\quad && (X \subseteq E)
+        \end{alignat*}
+    \end{dual}
+\end{frame}
+
+\begin{frame}{定理の証明 (4/4)}
+    \small
+    LPの一般論より，
+    $x = \ones_I$が主最適解であることを示すには，強双対性$w^\top x = \sum_{X \subseteq E} r(X)y_X$を満たす双対実行可能解$y$を構成すればよい．
+
+    \bigskip
+    実際，
+    \begin{align*}
+        y_S := \begin{cases}
+        w(e_{i_j}) - w(e_{i_{j+1}}) & \text{if } S = \{e_{i_1}, \dots, e_{i_j}\} \quad (j = 1, \dots, \ell - 1) \\
+        w(e_{i_\ell})                 & \text{if } S = \{e_{i_1}, \dots, e_{i_\ell}\} \\
+        0                             & \text{otherwise}
+        \end{cases}
+    \end{align*}
+    とすると，$y$は双対実行可能で，$(x, y)$が強双対性を満たすことが，直接計算により確認できる（各自確認せよ）． \qed
+\end{frame}
+
+\begin{frame}{マトロイド多面体上の線形最適化}
+    $w \in \R^E$
+    \begin{corollary}
+        マトロイド多面体上の線形最適化
+        \[  
+              \max \quad w^\top x \quad\text{s.t.}\quad x(X) \leq r_{\bM}(X) \quad (X \subseteq E), \; x \geq 0
+        \] 
+        は$O(n \log n + n \mathrm{IO})$時間で最適解を求められる．
+    \end{corollary}
+
+    \bigskip
+    指数本の不等式があるにもかかわらず，貪欲法で最適解を求められる．
+\end{frame}
+
+\begin{frame}{マトロイド多面体の整数性}
+    \begin{corollary}
+        不等式系$\{x(X) \leq r_{\bM}(X) \quad (X \subseteq E), \; x \geq 0\}$は整数多面体を定める．
+    \end{corollary}
+
+    \bigskip
+    $P(\bM)$を定める不等式系の係数行列は\alert{完全単模行列ではない！}\\
+    {\footnotesize \structure{(∵)}たとえば$\begin{bmatrix}
+        1 & 1 & 0 \\
+        0 & 1 & 1 \\
+        1 & 0 & 1
+    \end{bmatrix}$のように，行列式$=2$の部分行列を含んでいる．}
+
+    \bigskip
+    マトロイド多面体は完全単模性に依らず，整数性が証明できる．
+\end{frame}
+
+\againframe<1>{outline}
+\end{document}

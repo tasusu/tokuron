@@ -118,7 +118,7 @@
 
 % TikZ
 \usepackage{tikz}
-\usetikzlibrary{positioning,shapes,arrows,quotes,shapes.callouts,calc,graphs,graphs.standard,fit,backgrounds,perspective}
+\usetikzlibrary{positioning,shapes,arrows,quotes,shapes.callouts,calc,graphs,graphs.standard,fit,backgrounds,perspective,matrix}
 \tikzset{point/.style={circle, fill=AlertOrange, inner sep=1pt, text width=1pt}}
 \tikzset{bpoint/.style={circle, fill=black, inner sep=1pt, text width=1pt}}
 \tikzset{alt/.code args={<#1>#2#3}{\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}}}
@@ -126,8 +126,8 @@
 \tikzset{mynodes/.style={circle,white,fill=UniBlue!90,text width=.8em,inner sep=0pt,text centered,font=\footnotesize}}
 \tikzset{myedges/.style={thick}}
 \tikzset{mypath/.style={ultra thick, draw=AlertOrange}}
+\tikzset{mysubset/.style={draw,#1,dotted,thick,fill=#1!10}, mysubset/.default=UniBlue}
 \tikzset{mypath2/.style={ultra thick, dashed, draw=UniGreen}}
-\tikzset{mysubset/.style={draw,UniBlue,dotted,thick,fill=UniBlue!10}}
 \tikzset{graphs/mygraph/.style={nodes={mynodes}, edges={myedges}, empty nodes}}
 \tikzset{nomargin/.style={inner sep=0pt, outer sep=0pt}}
 %% graph macros
@@ -151,6 +151,15 @@ subgraph I_nm [V={1,2,3,4,5,6}, W={a,b,c,d,e,f}];
 subgraph I_nm [V={1,2,3}, W={a,b,c}];
 1 -- {a,b}; 2 -- {a,b,c}; 3 -- {a,c};
 }} 
+% Petersen graph
+\tikzgraphsset{declare={Petersen}{%
+    subgraph C_n [n=5,name=A, radius=1.5cm]; 
+    subgraph I_n [n=5,name=B, radius=.8cm];
+    \foreach \i [evaluate={\j=int(mod(\i+2,5)+1);}] in {1,...,5}{
+        A \i -- B \i;
+        B \i -- B \j;
+}}}
+
 
 % Appendix
 \usepackage{appendixnumberbeamer}
