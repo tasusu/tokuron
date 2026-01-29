@@ -125,7 +125,7 @@
 \tikzset{>=latex}
 \tikzset{mynodes/.style={circle,white,fill=UniBlue!90,text width=.8em,inner sep=0pt,text centered,font=\footnotesize}}
 \tikzset{myedges/.style={thick}}
-\tikzset{mypath/.style={ultra thick, draw=AlertOrange}}
+\tikzset{mypath/.style={ultra thick, draw=#1}, mypath/.default=AlertOrange}
 \tikzset{mysubset/.style={draw,#1,dotted,thick,fill=#1!10}, mysubset/.default=UniBlue}
 \tikzset{mypath2/.style={ultra thick, dashed, draw=UniGreen}}
 \tikzset{graphs/mygraph/.style={nodes={mynodes}, edges={myedges}, empty nodes}}
@@ -181,7 +181,9 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 \newcommand{\up}{{\mathrm{up}}}
 \newcommand{\caI}{\mathcal{I}}
 \newcommand{\caB}{\mathcal{B}}
+\newcommand{\caC}{\mathcal{C}}
 \newcommand{\bM}{\mathbf{M}}
+\newcommand{\IO}{\mathrm{IO}}
 
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}

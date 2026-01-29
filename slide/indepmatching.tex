@@ -1,0 +1,929 @@
+\RequirePackage{plautopatch}
+\documentclass[14pt,aspectratio=169,xcolor=dvipsnames,table,onlytextwidth,dvipdfmx]{beamer}
+\input{macros_ja}
+\csname endofdump\endcsname
+\title{組合せ最適化特論}
+\subtitle{第8回（独立マッチング・マトロイド交差）}
+\author{担当: \textbf{相馬 輔}}
+\date{2026/1/29}
+
+\begin{document}
+\maketitle
+
+\begin{frame}<1>[label=outline]{目次}
+\begin{tikzpicture}
+    \tikzstyle{block} = [rectangle, text width=\textwidth, rounded corners, minimum height=4em]
+    \tikzstyle{line} = [draw, -latex]
+
+    \node[block,alt={<1,3->{fill=cyan!10}{fill=red!10}}] (combopt) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{1. 独立マッチング}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 定義 \\
+                \structure{・} マトロイド交差 \\
+                \structure{・} 最大最小定理 
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-2,4->{fill=cyan!10}{fill=red!10}}, below=.5em of combopt] (LP) {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{2. サーキット}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} サーキット族 \\
+                \structure{・} 基本サーキット \\
+                \structure{・} 交換可能性
+            \end{column}
+        \end{columns}
+    };
+    \node[block,alt={<1-3,5->{fill=cyan!10}{fill=red!10}}, below=.5em of LP] {
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+        \textbf{3. アルゴリズム}
+            \end{column}
+            \begin{column}{0.4\linewidth}
+                \small
+                \structure{・} 増加道アルゴリズム \\
+                \structure{・} 最大最小定理の証明
+            \end{column}
+        \end{columns}
+    };
+\end{tikzpicture}%
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{独立マッチング}
+\againframe<2|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{独立マッチング}
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+        $G=(V^+, V^-; E)$: 二部グラフ \\
+        \textbf{$\bM^+ = (V^+, \caI^+)$: $V^+$上のマトロイド} \\ 
+        \textbf{$\bM^- = (V^-, \caI^-)$: $V^-$上のマトロイド}
+
+        \begin{definition}
+            マッチング$M$が\alert{独立マッチング} \\ 
+            $\defiff$ $\partial^+ M \in \caI^+$かつ$\partial^- M \in \caI^-$ \\
+            {\hfill\footnotesize ($\partial^+ M$, $\partial^- M$: それぞれ$M$に接続する$V^+$, $V^-$の頂点集合)}
+        \end{definition}
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering\small
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            subgraph I_nm [V={1,2,3}, W={4,5}];
+            1 -- {4,5};
+            2 -- {4,5};
+            3 -- {4};
+            % matching
+            {[edges={mypath}] {1,2} -- {4,5}; }
+        };
+        \node[AlertOrange, above] at ($(1)!0.5!(4)$) {$M$};
+        \node[above=1em of 1] {$V^+$};
+        \node[above=1em of 4] {$V^-$};
+        
+        \begin{scope}[on background layer]
+            \node[mysubset=AlertOrange, fit=(1) (2), "{$\partial^+ M$}" {AlertOrange, left }] {};
+            \node[mysubset=AlertOrange, fit=(4) (5), "{$\partial^- M$}" {AlertOrange, right}] {};
+        \end{scope}
+        }
+    \end{column}
+    \end{columns}
+
+    \vfill
+    \begin{block}{独立マッチング問題}
+        \[ 
+        \text{maximize} \quad \abs{M} \quad \text{subject to} \quad \text{$M$は独立マッチング}
+        \]
+    \end{block}
+    {\footnotesize $\caI^+ = 2^{V^+}$, $\caI^- = 2^{V^-}$のとき，通常の二部マッチング問題．}
+\end{frame}
+
+\begin{frame}{マトロイド交差}
+    $\bM_1 = (E, \caI_1)$, $\bM_2 = (E, \caI_2)$: 同じ台集合$E$上のマトロイド
+
+    \begin{block}{マトロイド交差}
+        \[ 
+        \text{maximize} \quad \abs{I} \quad \text{subject to} \quad I \in \caI_1 \cap \caI_2
+        \]
+    \end{block}
+
+    \pause
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+        右の二部グラフ$G$と，$(\bM^+, \bM^-) = (\bM_1, \bM_2)$に対する独立マッチング問題と等価
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering\small
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            subgraph I_nm [V={1,2,3}, W={4,5,6}];
+            {1,2,3} -- {4,5,6};
+        };
+            \node[above=.5em of 1] {$E$};
+            \node[above=.5em of 4] {$E$};
+        }
+    \end{column}
+    \end{columns}
+
+    \vfill
+    {\footnotesize \structure{注} 実は独立マッチングをマトロイド交差に帰着できることも知られており，互いに等価な問題である．}
+\end{frame}
+
+\begin{frame}{独立マッチングの最大最小定理}
+    \small
+    \begin{columns}[]
+    \begin{column}{.7\textwidth}
+        $S^+ \subseteq V^+, S^- \subseteq V^-$ が\alert{頂点被覆} \\
+        $\defiff$ 任意の枝$e = ij \in E$に対し，$i \in S^+$または$j \in S^-$.
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=4em]{
+            subgraph I_nm [V={1,2,3}, W={4,5}];
+            1 -- {4,5};
+            2 -- {4,5};
+            3 -- {4};
+        };
+        \begin{scope}[on background layer]
+            \node[mysubset, fit=(1) (2), "$S^+$" left ]{} ;
+            \node[mysubset, fit=(4), "$S^-$" right]{} ;
+        \end{scope}
+        \onslide<2->{
+            \graph[edges={mypath}] {{(1),(2)} -- {(4), (5)}; };
+        }
+        }
+        \footnotesize
+    \end{column}
+    \end{columns}
+
+    \onslide<2->
+    \begin{lemma}[弱双対性]
+        $r^+, r^-$をそれぞれ，マトロイド$\bM^+, \bM^-$の階数関数とする．\\
+        任意の独立マッチング$M$と頂点被覆$(S^+,S^-)$に対し，$\abs{M} \leq r^+(S^+) + r^-(S^-)$.
+    \end{lemma}
+    \structure{(証明)} 
+    \[
+        \abs{M} \leq \abs{\partial^+ M \cap S^+} + \abs{\partial^- M \cap S^-}  \leq r^+(S^+) + r^-(S^-) \qed
+    \]
+\end{frame}
+
+\begin{frame}{独立マッチングの最大最小定理}
+    \structure{今日の目標:} 以下の定理をアルゴリズム的に証明し，主・双対最適解が多項式時間で求められることを示す．
+    \begin{theorem}[Welsh (1970)]
+        \[
+            \max_{\text{$M$:独立マッチング}} |M| = \min_{\text{$(S^+,S^-)$: 頂点被覆}} r^+(S^+) + r^-(S^-)
+        \]
+    \end{theorem}
+
+    \vfill
+    これは，K\H{o}nig--Egerv\'aryの定理の一般化である．
+    \small
+    \begin{theorem}[K\H{o}nig--Egerv\'ary]
+        \[
+            \max_{\text{$M$:マッチング}} |M| = \min_{\text{$(S^+,S^-)$: 頂点被覆}} |S^+| + |S^-|
+        \]
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{マトロイド交差の最大最小定理}
+    定理をマトロイド交差の場合に適用すると，以下の定理が得られる．
+    \begin{theorem}[Edmonds (1970)]
+        \[
+            \max_{I \in \caI_1 \cap \caI_2} |I| = \min_{X \subseteq E} r_1(X) + r_2(E - X)
+        \]
+    \end{theorem}
+
+    \pause
+    \vfill
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+        \structure{(証明)}
+        帰着に用いた二部グラフにおいて，任意の$X \subseteq E$に対して$(S^+, S^-) = (X, E - X)$は頂点被覆．
+
+        \smallskip
+        逆に，頂点被覆$(S^+, S^-)$に対し，$X = S^+$とすると，頂点被覆の定義から$E - X \subseteq S^-$．
+        階数関数の単調性より，$r^+(S^+) + r^-(S^-) \geq r_1(X) + r_2(E - X)$
+        なので，右辺の最小化においては$(X, E-X)$の形の頂点被覆だけ考えれば良い． \qed
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            subgraph I_nm [V={1,2,3}, W={4,5,6}];
+            {1,2,3} -- {4,5,6};
+        };
+        \begin{scope}[on background layer]
+            \node[mysubset, fit=(1) (2), "$X$" left ]{} ;
+            \node[mysubset, fit=(6), "$E - X$" right]{} ;
+        \end{scope}
+        }
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{（参考）重み付き独立マッチング}
+
+    $w: E \to \R$: 重み, $k \in \Z_+$
+    \begin{block}{重み付き独立マッチング}
+        \[
+            \text{maximize} \quad w(M) \quad \text{subject to} \quad \text{$M$ 独立マッチング, $\abs{M} = k$}
+        \]
+    \end{block}
+
+    \begin{block}{重み付きマトロイド交差}
+        \[
+            \text{maximize} \quad w(I) \quad \text{subject to} \quad I \in \caI_1 \cap \caI_2, \quad \abs{I} = k
+        \]
+    \end{block}
+
+    \vfill
+    \structure{事実} 重み付き独立マッチング/マトロイド交差も多項式時間で解ける． (cf.~\mycite{\S 13.7 Korte--Vygen, 2018})
+\end{frame}
+
+\begin{frame}{応用例①: $k$独立集合問題}
+
+    \begin{block}{$k$森問題}
+        連結無向グラフ$G = (V, E)$と，非負整数$k \in \Z_+$に対し，$G$を$k$個の枝素な森に分割できるか？できるなら，そのような分割を求めよ．
+    \end{block}
+
+    \begin{center}
+        \begin{tikzpicture}
+            \graph[mygraph, clockwise]{
+                Petersen;
+                {[edges={mypath}]
+                    (A 4) -- (A 5) -- (A 1) -- (A 2) -- (A 3);
+                    (A 1) -- (B 1);
+                    (A 2) -- (B 2);
+                    (A 3) -- (B 3);
+                    (A 5) -- (B 5);
+                    (B 2) -- (B 4);
+                };
+                {[edges={mypath=UniGreen}]
+                    (A 4) -- {(A 3), (B 4)};
+                    (B 4) -- (B 1) -- (B 3);
+                    (B 5) -- {(B 2), (B 3)};
+                };
+            };
+        \end{tikzpicture}
+        \\ $k = 2$の例
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{応用例①: $k$独立集合問題}
+    より一般に:
+    \begin{block}{$k$独立集合問題}
+        台集合上$E$上のマトロイド$\bM_1, \dots, \bM_k$に対し，台集合$E$を$E = I_1 \cup \dots \cup I_k$ ($I_i \in \caI_i$)と$k$個の独立集合へ分割できるか？できるなら，そのような分割を求めよ．
+    \end{block}
+
+    \vfill
+    \begin{theorem}
+        $k$独立集合問題は独立マッチングへ帰着することで，多項式時間で解ける．
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{マトロイドの直和}
+        \begin{definition}
+        $\bM_1 = (E_1, \caI_1)$, $\bM_2 = (E_2, \caI_2)$: 台集合が互いに素なマトロイド 
+
+        このとき，
+        \[
+            \caI = \{I_1 \oplus I_2: I_1 \in \caI_1, I_2 \in \caI_2 \}
+        \]
+        は$E_1 \oplus E_2$上のマトロイドの独立集合族になる．
+        これを$\bM_1$と$\bM_2$の\alert{直和 (direct sum)}といい，$\bM_1 \oplus \bM_2$で表す．
+
+        \bigskip
+        $k$個のマトロイドの直和も同様に定義でき，$\bM_1 \oplus \dots \oplus \bM_k$で表す．
+        \end{definition}
+\end{frame}
+
+\begin{frame}{$k$独立集合問題→独立マッチングへの帰着}
+    \small
+    \begin{theorem}
+        $k$独立集合問題は独立マッチングへ帰着することで，多項式時間で解ける．
+    \end{theorem}
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    \pause
+    \structure{(証明)} 右図の二部グラフを考える．頂点集合は
+    \setlength{\abovedisplayskip}{1pt}
+    \setlength{\belowdisplayskip}{1pt}
+    \begin{align*}
+        V^+ &= E_1 \oplus \dots \oplus E_k \quad (\text{各$E_i$は$E$のコピー}) \\
+        V^- &= E
+    \end{align*}
+    であり，各枝はオリジナルの要素$e \in E$と各コピー$e \in E_i$ ($i=1, \dots, k$)を結んでいる．
+    
+    $V^+, V^-$上のマトロイドを次のように定める:
+    \begin{align*}
+        \bM^+ &= \bM_1 \oplus \dots \oplus \bM_k \\
+        \bM^- &= (V^-, 2^{V^-})
+    \end{align*}
+    
+    このとき，
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \foreach \y in {1,2,3}{
+                \node[mynodes] (V-1-\y) at (0, .5*\y) {};
+                \node[mynodes] (V-2-\y) at (0, -3+.5*\y) {};
+                \node[mynodes] (W-\y)   at (2, -1.5+.5*\y) {};
+            }
+            \node at ($(V-1-3)!.5!(V-2-1)$) {$\vdots$};
+            \graph[mygraph]{
+                {(V-1-1), (V-1-2), (V-1-3)} -- {(W-1), (W-2), (W-3)};
+                {(V-2-1), (V-2-2), (V-2-3)} -- {(W-1), (W-2), (W-3)};
+        };
+        \node[draw, rectangle, fit=(V-1-1) (V-1-3), "{$E_1$}" left] {};
+        \node[draw, rectangle, fit=(V-2-1) (V-2-3), "{$E_k$}" left] {};
+        \node[draw, rectangle, fit=(W-1) (W-3), "{$E$}" right] {};
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+    \begin{block}{}
+    大きさ$\abs{E}$の独立マッチング $\longleftrightarrow$ 独立集合への分割$E = (I_1, \dots, I_k)$ 
+    \end{block}\qed
+\end{frame}
+
+
+\begin{frame}{応用例②: 最小重み全域有向木}
+    \small
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    \begin{definition}
+        有向グラフ$D = (V, A)$の部分グラフ$T$が，$r \in V$を根とする\alert{全域有向木 (spanning arborescence)}$\defiff$
+        \begin{itemize}
+            \item 枝の向きを無視すると$T$は全域木
+            \item 任意の頂点$v \in V - r$に対し，$\rho_T(v) = 1$ \\ 
+            {\hfill\footnotesize ($\rho_T(v)$: $T$における$v$の入次数)}
+        \end{itemize}
+    \end{definition}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \graph[mygraph, grow right=2cm, branch down=2cm]{
+                r[as={$r$}] -> a -> b;
+                c -> d -> e;
+                r -> {c, d};
+                {a, b} -> e;
+                d -> {a, b, e};
+                {[edges={mypath}] 
+                r -> {a, c};
+                r -> d -> {b, e}; 
+                }
+            };
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+
+    \begin{block}{最小重み全域有向木}
+        $w: A \to \R$: 枝重み
+        \[
+            \text{minimize} \quad w(T) \quad \text{subject to} \quad \text{$T$は$r$を根とする全域有向木}    
+        \]
+    \end{block}
+\end{frame}
+
+\begin{frame}{重み付きマトロイド交差への帰着}
+    枝集合$A$上のマトロイド$\bM_1, \bM_2$を次のように定める:
+    \begin{itemize}
+        \item $\bM_1 := $ $G$の向きを無視した無向グラフに対するグラフ的マトロイド
+        \item $\bM_2 := (\In(r), 2^{\In(r)}) \oplus (\text{分割$\{\In(v): v \in V - r\}$に対する分割マトロイド})$
+    \end{itemize}
+
+    \begin{block}{}
+        \centering
+        $T \subseteq A$が全域有向木 $\iff$ $T \in \caI_1 \cap \caI_2$かつ$\abs{T} = \abs{V} - 1$
+    \end{block}
+
+    \vfill
+    よって，最小重み全域有向木問題は重み付きマトロイド交差に帰着でき，多項式時間で解ける．
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{サーキット}
+\againframe<3|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{サーキット}
+\begin{definition}
+    \begin{itemize}
+        \item $X \subseteq E$が\alert{従属集合 (dependent set)} $\defiff$ $X \notin \caI$.
+        \item 
+    $C \subseteq E$が\alert{サーキット (circuit)} \\ 
+    $\defiff$ $C \notin \caI$かつ$C$の任意の真部分集合$C' \subsetneq C$は$C' \in \caI$ 
+    \end{itemize}
+\end{definition}
+    すなわち，サーキットは極小な従属集合．
+
+    \vfill
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    \structure{例} グラフ的マトロイドのサーキット$=$グラフの単純閉路
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{\graph[mygraph, clockwise]{Petersen;
+        {[edges={mypath}] 
+            (A 1) -- (A 2) -- (A 3) -- (A 4) -- (A 5) -- (A 1);
+        }
+        };}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{サーキット}
+\begin{theorem}
+    サーキット族$\caC$は以下の性質を満たす: 
+    \begin{description}
+        \item[(C1)] $C_1, C_2 \in \caC$, $C_1 \subseteq C_2 \implies C_1=C_2$
+        \item[(C2)] $C_1, C_2 \in \caC$ ($C_1 \neq C_2$), $e \in C_1 \cap C_2$ \\ $\implies (C_1 \cup C_2) - e$はサーキットを含む．
+    \end{description}
+\end{theorem}
+{\hfill\footnotesize $(C_1 \cup C_2) - e := (C_1 \cup C_2) \setminus \{ e \}$}
+    
+    \begin{center}
+        \begin{tikzpicture}[xscale=1.2, yscale=.9]
+            \graph[mygraph, no placement]{
+                1[at={(0,0)}];
+                2[at={(0,1)}];
+                3[at={(0,2)}];
+                4[at={(-1,2.5)}];
+                5[at={(-2,1.5)}];
+                6[at={(-2,0.5)}];
+                7[at={(-1,-0.5)}];
+                8[at={(1.5, 2.5)}];
+                9[at={(2.5, 1)}];
+                10[at={(1.5, -.5)}];
+                1 -- 2 -- 3 -- 4 -- 5 -- 6 -- 7 -- 1;
+                1 -- 2 -- 3 -- 8 -- 9 -- 10 -- 1;
+            };
+            \node[right] at ($(2)!0.5!(3)$) {$e$};
+            \node at ($(5)!0.5!(2)$) {$C_1$};
+            \node at ($(9)!0.5!(2)$) {$C_2$};
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{定理の証明}
+    \tikz[overlay, remember picture]{
+        \node[anchor=north east] at (current page.north east) {
+        \tikz{
+            \node[circle, fill=UniBlue, opacity=.3, minimum size=1.8cm] (B1) at (0,0) {};
+            \node[circle, fill=AlertOrange, opacity=.3, minimum size=2cm] (B2) at (1,0) {};
+            \node[point,fill=UniBlue,"$f$" above] (j) at ([xshift=-.4cm] B1.base) {};
+            \node[UniBlue, above=1pt of B1, xshift=-.4cm] {$C_1$};
+            \node[AlertOrange, above=1pt of B2, xshift=+.4cm] {$C_2$};
+        }
+            };
+    }
+    
+    \textbf{(C1): } 極小性から明らか．
+
+    \smallskip
+    \textbf{(C2): } 
+    $C_1 \neq C_2$と(C1)から要素$f \in C_1 - C_2$が存在する．
+    極小性から$C_1 - f$は独立集合である．
+    $C_1 - f$に$C_2 - C_1$の要素を追加して$C_1 \cup C_2$に含まれる最大の独立集合$B$を作る．
+    $B$は独立集合なのでサーキット$C_2$を含むことはできないから，
+    \[
+        \abs{B} < \abs{C_1 - f} + \abs{C_2 - C_1} = \abs{C_1 \cup C_2} - 1 = \abs{(C_1 \cup C_2) - e}
+    \]
+    $B$は$C_1 \cup C_2$に含まれる最大の独立集合であったから，$(C_1 \cup C_2)- e$は従属集合であり，サーキットを含む． \qed
+\end{frame}
+
+\tikzgraphsset{declare={excexample}{%
+    1[at={(0,0)}];
+    2[at={(-1,1.4)}];
+    3[at={(-1,-.8)}]; 
+    4[at={(1,0)}]; 
+    5[at={(2,1.4)}]; 
+    6[at={(2,0)}]; 
+    7[at={(3,0)}]; 
+    8[at={(4,.5)}]; 
+    9[at={(4,-.5)}];
+    {2, 3} -- 1 -- 4 -- 6 -- 5;
+    6 -- 7 -- {8, 9};
+}}
+
+\begin{frame}{基本サーキット}
+    \begin{lemma}
+    独立集合$I$と$y \notin I$, $I + y \notin \caI$に対し，$I+y$は$y$を含むサーキットをただ1つ含む．これを$I$と$y$に対する\alert{基本サーキット(fundamental circuit)}といい，$C(I, y)$と書く．
+\end{lemma}
+
+\begin{center}
+    \begin{tikzpicture}
+        \graph[mygraph, no placement]{ excexample };
+        \draw[mypath, dotted] (2) to[bend left=30] node[above, midway, AlertOrange] {$y$} (5);
+        \node[above=.5em of 4, xshift=-.6em] {$C(I, y)$};
+    \end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{補題の証明} 
+    \textbf{[存在性]}
+    $I+y$は従属なので，サーキット$C$を含む．
+    $I$は独立なので$C \subseteq I$ではあり得ないから，$y \in C$である．
+
+    \bigskip
+    \textbf{[一意性]}
+    もしこのようなサーキットが$C_1, C_2$ ($C_1\neq C_2$)の2つあったとすると，(C2)より$(C_1 \cup C_2)- y\subseteq I$がサーキットを含むことになってしまい，$I$の独立性に反する． \qed
+
+\end{frame}
+
+\begin{frame}{基本サーキットと交換可能性}
+    \begin{lemma}
+        $I \in \caI$, $y \notin I$, $I + y \notin \caI$, $x \in I$とする．このとき，$x \in C(I, y) \iff I - x + y \in \caI$.
+    \end{lemma}
+    
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    \structure{(証明)}
+    前補題より，$I + y$は唯一のサーキット$C(I, y)$を含む．
+    $x \in C(I, y)$より，$I - x + y$は$C(I, y)$を含まないから，独立集合である．逆も同様． \qed
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+    \begin{tikzpicture}
+        \graph[mygraph, no placement]{ excexample };
+        \draw[mypath, dotted] (2) to[bend left=30] node[above, midway, AlertOrange] {$y$} (5);
+        \node[above=.5em of 4, xshift=-.6em] {$C(I, y)$};
+        \node[below] at ($(1)!0.5!(4)$) {$x$};
+    \end{tikzpicture}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{逐次交換可能性}
+    $I - x_1 + y_1 \in \caI$かつ$I - x_2 + y_2 \in \caI$ならば，$I \setminus \{ x_1, x_2 \} \cup \{y_1, y_2 \} \in \caI$か？
+
+    \pause
+    \bigskip
+    {\coloremoji[scale=1.8]{❌️}} 一般には正しくない
+
+    \begin{columns}
+    \begin{column}{.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+        \graph[mygraph, no placement]{ excexample };
+        \draw[mypath, dotted] (2) to[bend left=30] node[above, midway, AlertOrange] {$y_1$} (5);
+        \draw[mypath, dotted] (3) to[bend right=90] node[below, midway, AlertOrange] {$y_2$} (7);
+        \node[above=.5em of 4, xshift=-.6em] {$C(I, y_1)$};
+        \node[below=.8em of 4, xshift=-.4em] {$C(I, y_2)$};
+        \node[below] at ($(1)!0.5!(4)$) {$x_1$};
+        \node[below] at ($(4)!0.5!(6)$) {$x_2$};
+    \end{tikzpicture}
+    \end{column}
+    \begin{column}{.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+        \graph[mygraph, no placement, simple]{ excexample; 1 -!- 4; 4 -!- 6; };
+        \draw[myedges] (2) to[bend left=30] node[above, midway, AlertOrange] {$y_1$} (5);
+        \draw[myedges] (3) to[bend right=90] node[below, midway, AlertOrange] {$y_2$} (7);
+        % \node[above=.5em of 4, xshift=-.6em] {$C(I, y_1)$};
+        % \node[below=.8em of 4, xshift=-.4em] {$C(I, y_2)$};
+        % \node[below] at ($(1)!0.5!(4)$) {$x_1$};
+        % \node[below] at ($(4)!0.5!(6)$) {$x_2$};
+    \end{tikzpicture}
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{逐次交換可能性}
+    \small
+    
+    \begin{lemma}
+        $I \in \caI$, $x_1, \dots, x_s \in I$, $y_1, \dots, y_s \notin I$に対し，
+        \begin{enumerate}
+            \setlength{\itemsep}{0pt}
+            \item $I + y_k \notin \caI$, $x_k \in C(I, y_k)$ \quad ($k=1, \dots, s$) \\ 
+            \textcolor{gray}{\dotfill $(x_k, y_k)$は交換可能}
+            \item $x_j \notin C(I, y_k)$ \quad ($1 \leq j < k \leq s$)
+        \end{enumerate}
+    とする．このとき，$I \setminus \{x_1, \dots, x_s\} \cup \{y_1, \dots, y_s\} \in \caI$.
+    \end{lemma}
+
+    \centering
+    \begin{tikzpicture}[scale=.8]
+        \graph[mygraph, no placement]{ excexample };
+        \draw[mypath, dotted] (2) to[bend left=30] node[above, midway, AlertOrange] {$y_1$} (5);
+        \draw[mypath, dotted] (3) to[bend right=90] node[below, pos=.8, AlertOrange] {$y_2$} (7);
+        \node[above=.5em of 4, xshift=-.6em] {$C(I, y_1)$};
+        \node[below=.8em of 4, xshift=-.4em] {$C(I, y_2)$};
+        \node[left] at ($(1)!0.5!(2)$) {$x_1$};
+        \node[below] at ($(4)!0.5!(6)$) {$x_2$};
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{逐次交換可能性の証明}
+    \postit{\footnotesize
+        \begin{minipage}{.5\textwidth}
+        \begin{enumerate}
+            \setlength{\itemsep}{0pt}
+            \item $I + y_k \notin \caI$, $x_k \in C(I, y_k)$ \quad ($k=1, \dots, s$) 
+            \item $x_j \notin C(I, y_k)$ \quad ($1 \leq j < k \leq s$)
+        \end{enumerate}
+        \end{minipage}
+    }
+    \structure{(証明)} $I_k := I \setminus \{x_1, \dots, x_k\} \cup \{y_1, \dots, y_k\}$ ($k=0, \dots, s$)とおく．$I_k \in \caI$を$k$に関する帰納法で示す．
+    
+    \bigskip
+    $k=0$のときは$I_k = I$より自明．
+    
+    $k > 0$とし，$I_{k-1} \in \caI$とする．$I_{k-1} + y_k \in \caI$なら，$I_k = I_{k-1} + y_k - x_k \in \caI$よりOK．$I_{k-1} + y_k \notin \caI$の場合を考える．
+
+    \bigskip
+    $C := C(I_{k-1}, y_k)$を基本サーキットとする．仮定より，$C(I, y_k) \subseteq I_{k-1} + y_k$だから，基本サーキットの一意性より$C = C(I, y_k)$．よって，$x_k \in C$なので，$I_{k-1} - x_k + y_k \in \caI$. \qed
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{アルゴリズム}
+\againframe<4|handout:0>{outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{補助ネットワーク}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    独立マッチング$M$に対し，補助ネットワーク$D_M$を以下のように定義する:
+    \begin{itemize}
+        \item 頂点集合: $V^+$, $V^-$ （元のグラフと同じ）
+        \item 枝集合: $A_M := \overrightarrow{E} \cup {\color{AlertOrange}\overleftarrow{M}} \cup {\color{UniGreen} A^+} \cup {\color{UniGreen} A^-}$
+        \begin{align*}
+            \overrightarrow{E} &:= \{(i, j) : ij \in E\} \text{\color{gray}\dots\dots$E$の準向き枝}\\
+            \color{AlertOrange} \overleftarrow{M} &:= \{(j, i) : ij \in M\} \text{\color{gray}\dots\dots$M$の逆向き枝}\\
+            \color{UniGreen} A^+ &:= \{(i, j) : i \in \partial^+ M, \partial^+ M + j \notin \caI^+, i \in C(\partial^+ M, j)\} \\
+            & \quad \text{\color{gray}\dots\dots$\bM^+$の交換可能性を表す枝} \\
+            \color{UniGreen} A^- &:= \{(i, j) : j \in \partial^- M, \partial^- M + i \notin \caI^-, j \in C(\partial^- M, i)\} \\
+            & \quad \text{\color{gray}\dots\dots$\bM^-$の交換可能性を表す枝} \\
+        \end{align*}
+    \end{itemize}
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        % \includegraphics[width=.5\textwidth]{figs/indepmatching1.png}
+        \begin{tikzpicture}
+            \graph[mygraph, grow right=5em]{
+                subgraph I_nm [V={1,2,3,4,5}, W={6,7,8,9,10}];
+                {1,2,3,4,5} -> {6,7,8,9,10};
+                {2,3} -> {6,7};
+                {[edges={mypath}] {3,4} <-> {8,9}; };
+                {[edges={UniGreen}] 
+                    4 ->[bend right] 5;
+                    6 ->[bend left] {8, 9};
+                    7 ->[bend left] {8, 9};
+                };
+            };
+            \node[left =.3em of 4, UniGreen] {$A^+$};
+            \node[right=1em of 7, UniGreen] {$A^-$};
+        \end{tikzpicture}
+        \\ $D_M$
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{補助ネットワーク}
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    補助ネットワーク$D_M$の頂点部分集合を次のように定める．
+    \begin{itemize}
+        \item $U^+ := \{i \in V^+ - \partial^+ M : \partial^+ M + i \in \caI^+\}$
+        \item $U^- := \{j \in V^- - \partial^- M : \partial^- M + j \in \caI^-\}$
+    \end{itemize}
+    \textcolor{gray}{\dotfill$\partial^+ M, \partial^- M$に追加できる要素の集合}
+
+    \bigskip
+    \onslide<2->{
+    \structure{パスによるマッチングの増大} \\
+    $D_M$上の$U^+$--$U^-$パス$P$に対し，$P$に沿って$M$の枝を反転させたマッチングを$M'$とする．
+    {\footnotesize （ただし，$A^+$や$A^-$の枝は反転させない）}
+
+    定義から，$\abs{M'} = \abs{M} + 1$.
+    }
+    \end{column}
+    \begin{column}{.3\textwidth}
+        % \includegraphics[width=\textwidth]{figs/indepmatching1.png}
+        \centering
+        \begin{tikzpicture}
+            \graph[mygraph, grow right=5em]{
+                subgraph I_nm [V={1,2,3,4,5}, W={6,7,8,9,10}];
+                {1,2,3,4,5} -> {6,7,8,9,10};
+                {2,3} -> {6,7};
+                {[edges={mypath}] {3,4} <-> {8,9}; };
+                {[edges={UniGreen}] 
+                    4 ->[bend right] 5;
+                    6 ->[bend left] {8, 9};
+                    7 ->[bend left] {8, 9};
+                };
+            };
+            \node[left =.3em of 4, UniGreen] {$A^+$};
+            \node[right=1em of 7, UniGreen] {$A^-$};
+            \begin{scope}[on background layer]
+                \node[mysubset, fit=(1) (2), "{$U^+$}" left] {};
+                \node[mysubset, fit=(10), "{$U^-$}" right] {};
+            \end{scope}
+        \end{tikzpicture}
+        \\ $D_M$
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{増加道アルゴリズム}
+    \begin{theorem}
+        \begin{itemize}
+            \item $P$が\alert{枝数最小の}$U^+$--$U^-$パスならば，$M'$は独立マッチング．
+            \item $U^+$--$U^-$パスが存在しないとき，$X$を$D_M$において$U^+$から到達可能な頂点集合とすると，$(V^+ - X, V^- \cap X)$は頂点被覆であり，強双対性$\abs{M} = r^+(V^+ - X) + r^-(V^- \cap X)$を満たす．したがって，$M$は最大独立マッチング．
+        \end{itemize}
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{増加道アルゴリズム}
+
+    定理より，以下のようなアルゴリズムが得られる．
+
+    \begin{block}{増加道アルゴリズム}
+        \begin{algorithmic}[1]
+            \STATE $M \gets \emptyset$とする．
+            \WHILE{$D_M$に$U^+$--$U^-$パスが存在する}
+                \STATE 枝数最小の$U^+$--$U^-$パス$P$を求める． \\
+                \textcolor{gray}{\dotfill 幅優先探索で発見可能}
+                \STATE $P$に沿って枝を反転して，より大きな独立マッチング$M$を得る．
+            \ENDWHILE
+            \STATE $X$を$D_M$において$U^+$から到達可能な頂点集合とする．
+            \RETURN $M$, $(V^+ - X, V^- \cap X)$
+        \end{algorithmic} 
+    \end{block}
+
+    {\footnotesize 二部マッチングに対する増加道アルゴリズムの一般化．}
+\end{frame}
+
+
+\begin{frame}{定理の証明 (1/2)}
+    \small 
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \textbf{[$M'$が独立マッチングであること]} \\
+    $x_0$: $P$の始点 \\
+    $(x_1, y_1), \dots, (x_s, y_s)$: $P$上の$A^+$枝（この順で現れる）  \\
+    \begin{block}{}
+        \centering
+    $\partial^+ M' = (\partial^+ M + x_0) \setminus \{ x_1, \dots, x_s \} \cup \{ y_1, \dots, y_s \}$ \\
+    \end{block}
+
+    $I := \partial^+M + x_0$と$x_1, \dots, x_s$, $y_1, \dots, y_s$が逐次交換補題の条件を満たすことを確かめればよい． 
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \footnotesize
+        \begin{tikzpicture}
+            \graph[mygraph, branch down=2.5em]{
+                x0["{$x_0$}" left];
+                x1["{$x_1$}" left];
+                y1["{$y_1$}" left];
+                x2["{$x_2$}" left];
+                y2["{$y_2$}" left];
+            };
+            \draw[myedges, ->] (x0) -- ++(2,0);
+            \draw[myedges, ->] (y1) -- ++(2,0);
+            \draw[myedges, ->] (y2) -- ++(2,0);
+            \draw[mypath , <-] (x1) -- ++(2,0);
+            \draw[mypath , <-] (x2) -- ++(2,0);
+            \draw[myedges, UniGreen, ->] (x1) to[bend right] (y1);
+            \draw[myedges, UniGreen, ->] (x2) to[bend right] (y2);
+            \begin{scope}[on background layer]
+                \node[mysubset, fit=(x0), "{$U^+$}" above] {};
+            \end{scope}
+
+            % shortcut
+                \draw[myedges, UniGreen, ->, dashed, visible on=<2->] (x1) to[bend right=90] coordinate[midway] (x1-y2) (y2);
+                \node[visible on=<2->] at (x1-y2) {\textcolor{red}{\bf ×}};
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+
+    \pause
+    \bigskip
+    基本サーキットの一意性から，$C(\partial^+ M, y_k) = C(I, y_k)$ ($k = 1, \dots, s$) に注意する．①は交換可能性枝$A^+$の定義から，②は$P$が枝数最小なのでショートカットが存在しないことから従う．
+
+    \bigskip
+    ∴逐次交換補題より，$\partial^+ M' \in \caI^+$.
+
+    \bigskip
+    同様にして，$\partial^- M' \in \caI^-$も示せる． \qed
+\end{frame}
+
+\begin{frame}{定理の証明 (2/2)}
+    \small
+    \textbf{[$(V^+ - X, V^- \cap X)$が階数最小頂点被覆であること]} 
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+
+    $(S^+, S^-) := (V^+ - X, V^- \cap X)$とする．これが頂点被覆であることは二部マッチングのところで既にやった．
+
+    \onslide<2->{
+    \begin{itemize}
+        \item $X$から出る$A^+$の枝が存在しないことから，任意の$i \in S^+ - \partial^+ M$に対し，$C(\partial^+ M, i) \subseteq S^+$
+        \item 任意の$i \in S^+ - \partial^+ M$に対し，$\partial^+ M \cap S^+ + i$はサーキット$C(\partial^+ M, i)$を含むから，従属集合．
+    \end{itemize}
+    ∴ $\partial^+ M \cap S^+$は$S^+$の最大独立集合．
+    同様に，$\partial^- M \cap S^-$は$S^-$の最大独立集合．
+    % \begin{itemize}
+    %     \item $r^+(S^+) = \abs{\partial^+ M \cap S^+}$
+    %     \item $r^-(S^-) = \abs{\partial^- M \cap S^-}$
+    % \end{itemize}
+    }
+
+    \onslide<3->{
+    \[
+        r^+(S^+) + r^-(S^-) = \abs{\partial^+ M \cap S^+} + \abs{\partial^- M \cap S^-} = \abs{M} \qed
+    \]
+    }
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \centering
+        \tikz{
+            \graph[mygraph, grow right=5em]{
+            mybipartitedi;
+
+            % matching
+            {[edges={mypath}] {1,2,5} <-> {a,b,f}; };
+            % exchangeable edges
+            {[edges={UniGreen}] 
+            5 ->[bend left] 4; {1, 2} ->[bend right] 3;
+            d ->[bend right] {a, b}; e ->[bend left] f;
+            };
+        };
+        \begin{scope}[on background layer]
+            \path[draw,AlertOrange!10,fill=AlertOrange!10,line width=1.0cm, rounded corners] (4.north west) -- (6.south west) -- (f.south west) -- (e.north west) -- cycle node[AlertOrange,left]{$X$};
+            \node[mysubset, fit=(6), "$U^+$" left ]{} ;
+            \node[mysubset, fit=(c), "$U^-$" right]{} ;
+            \node[draw,UniPink,dotted,thick,fill=UniPink!10, fit=(1) (2) (3), "$S^+$" left ]{} ;
+            \node[draw,UniPink,dotted,thick,fill=UniPink!10, fit=(e) (f), "$S^-$" right]{} ;
+        \end{scope}
+        % nonexsistent exchange edge
+        \onslide<2->{
+        \graph[mygraph, edges={UniGreen, dashed}]{
+            (5) ->[bend left, "\coloremoji{❌️}" above] (3);
+        };
+        }
+        }
+    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{増加道アルゴリズムの計算量}
+    \small
+    $n := \abs{V}$, $m := \abs{E}$, $\IO:=$ マトロイド$\bM^+, \bM^-$の独立性オラクルの計算量 
+    とする．
+
+    \bigskip
+    \textbf{1反復あたりの計算量:}
+    \begin{itemize}
+        \item 補助ネットワーク$D_M$の構築: $O(n^2 \IO + m)$
+        \item $U^+$--$U^-$パスの探索: $O(n^2 + m)$
+    \end{itemize}
+    
+    また，全体では高々$n/2$反復．
+
+    \vfill
+    \begin{theorem}
+        独立マッチング問題は$O(n^3 \IO + mn)$時間で解ける．
+    \end{theorem}
+\end{frame}
+
+%
+\section{まとめ}
+\begin{frame}{まとめ: 独立マッチング}
+
+    \structure{まとめ}
+    \begin{itemize}
+        \item 独立マッチング・マトロイド交差の定式化
+        \item 最大最小定理
+        \item 増加道アルゴリズム
+    \end{itemize}
+
+    \bigskip
+    \structure{発展}
+    \begin{itemize}
+        \item 伊理・富沢 (JORSJ, 1976): 重みつき独立マッチングに対する逐次最短路・主双対法 
+        \item Gabow--Xu (1996): 線形マトロイド交差に対する高速化 
+    \end{itemize}
+\end{frame}
+\end{document}

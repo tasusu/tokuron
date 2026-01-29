@@ -823,14 +823,14 @@
 
 \begin{frame}{マトロイド多面体の例}
    
-    \small
-    \begin{example}[分割マトロイド]
-        分割$(E_1, E_2, \dots, E_k)$に対する分割マトロイドのマトロイド多面体は次で表される:
-        \begin{alignat*}{2}
-            x(E_i \cap X) &\leq \abs{E_i \cap X} &\quad (X \subseteq E, i = 1, \dots, k)\\
-            x &\geq 0 &
-        \end{alignat*}
-    \end{example}
+    % \small
+    % \begin{example}[分割マトロイド]
+    %     分割$(E_1, E_2, \dots, E_k)$に対する分割マトロイドのマトロイド多面体は次で表される:
+    %     \begin{alignat*}{2}
+    %         x(E_i \cap X) &\leq \abs{E_i \cap X} &\quad (X \subseteq E, i = 1, \dots, k)\\
+    %         x &\geq 0 &
+    %     \end{alignat*}
+    % \end{example}
     
     \begin{example}[グラフ的マトロイド]
         連結な無向グラフ$G = (V, E)$に対するグラフ的マトロイドのマトロイド多面体は次で表される:
@@ -843,10 +843,10 @@
 \end{frame}
 
 \begin{frame}{定理の証明 (1/4)}
-    $P := \{x \in \R^E: x(X) \leq r_{\bM}(X) \quad (\forall X \subseteq E), \quad x \geq 0 \}$とする．
+    $P := \{x \in \R^E: x(X) \leq r_{\bM}(X) \quad (X \subseteq E), \quad x \geq 0 \}$とする．
 
     \bigskip
-    \structure{$P \subseteq P(\bM)$であること:}
+    \structure{$P(\bM) \subseteq P$であること:}
     $I \in \caI$を独立集合とし，$x = \ones_I$を特性ベクトルとする．任意の部分集合$X \subseteq V$に対し，
     \begin{align*}
         x(X) = |I \cap X| \leq r_{\bM}(X). \tag{$I \cap X \subseteq X$は独立集合より}
@@ -856,7 +856,7 @@
 
 \begin{frame}{定理の証明 (2/4)}
     \small
-    \structure{$P(\bM) \subseteq P$であること:} 任意の$w \in \R^E$に対し，$\max_{x \in P} w^\top x$を達成する点が$P(\bM)$に存在することを示す．
+    \structure{$P \subseteq P(\bM)$であること:} 任意の$w \in \R^E$に対し，$\max_{x \in P} w^\top x$を達成する点が$P(\bM)$に存在することを示す．
 
     \bigskip
     $w$を重みとする最大重み独立集合問題を考える:
@@ -916,7 +916,6 @@
 \end{frame}
 
 \begin{frame}{マトロイド多面体上の線形最適化}
-    $w \in \R^E$
     \begin{corollary}
         マトロイド多面体上の線形最適化
         \[  
@@ -944,6 +943,26 @@
 
     \bigskip
     マトロイド多面体は完全単模性に依らず，整数性が証明できる．
+\end{frame}
+
+\begin{frame}{マトロイド基多面体}
+    基についても同様の定理が成り立つ．
+
+    \begin{definition}
+        マトロイド$\bM$の\alert{基多面体 (base polytope)}を次で定める:
+        \[
+            B(\bM) := \conv\{\ones_B: B \in \caB \} \subseteq \R^E
+        \]
+        {\footnotesize \hfill ($\ones_B \in \{0,1\}^E$: $B$の特性ベクトル)}
+    \end{definition}
+
+    \bigskip
+    \begin{theorem}[Edmonds (1970)]
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{align*}
+            B(\bM) = \{x \in \R^E: x(X) \leq r_{\bM}(X) \; (X \subseteq E), \; \highlight{$x(E) = r_{\bM}(E)$}, \; x \geq 0 \}
+        \end{align*}
+    \end{theorem}
 \end{frame}
 
 \againframe<1>{outline}
