@@ -168,7 +168,11 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\be}{\mathbf{e}}
+\newcommand{\zeros}{\mathbf{0}}
 \newcommand{\ones}{\mathbf{1}}
+\newcommand{\bfzero}{\zeros}
+\newcommand{\bfone}{\ones}
+
 % \newcommand{\bp}{\mathbf{p}}
 \newcommand{\eps}{\varepsilon}
 \newcommand{\defiff}{\overset{\text{def}}{\iff}}
@@ -213,7 +217,7 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 
 %grid
 % \usepackage[colorgrid,gridunit=pt,texcoord]{eso-pic}
-\newcommand{\postit}[1]{\tikz[overlay, remember picture]{\node[draw,anchor=north east, align=center, rectangle, fill=yellow!10,xshift=-1pt,yshift=-1pt] at (current page.north east) {#1};}}
+\newcommand{\postit}[1]{\tikz[overlay, remember picture]{\node[draw,anchor=north east, align=center, rectangle, fill=yellow!10, xshift=-1pt, yshift=-1pt] at (current page.north east) {#1};}}
 
 \usepackage{tcolorbox}
 \newtcolorbox{primal}{colback=red!10!white, colframe=red, title=主問題 (P), left=2pt,right=2pt,top=0pt,bottom=0pt}
@@ -227,3 +231,13 @@ subgraph I_nm [V={1,2,3}, W={a,b,c}];
 
 \newcommand{\Aphiup}{\textcolor{UniBlue}{A_\varphi^\up}}
 \newcommand{\Aphilow}{\textcolor{AlertOrange}{A_\varphi^\lo}}
+\newcommand{\bv}{\boldsymbol{v}}
+\newcommand{\bx}{\boldsymbol{x}}
+\newcommand{\by}{\boldsymbol{y}}
+\newcommand{\bz}{\boldsymbol{z}}
+\newcommand{\bw}{\boldsymbol{w}}
+\newcommand{\bc}{{\boldsymbol c}}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\argmax}{argmax}
+\DeclareMathOperator{\argmin}{argmin}
+\DeclareMathOperator{\E}{\mathbb{E}}
