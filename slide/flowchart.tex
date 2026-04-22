@@ -6,7 +6,7 @@
         \node[block,above=1em of BM.north west, xshift=-2em] (WBM) {重みつき\\二部マッチング};
         \node[block,above=5em of BM.north east, xshift=1em] (NF) {最大流};
         \node[block,above=9em of BM] (MCF) {最小費用流};
-        \node[block,above=1em of NF.north east, xshift=1em] (MC) {最小カット};
+        % \node[block,above=1em of NF.north east, xshift=1em] (MC) {最小カット};
         \node[block,right=11em of BM] (MTR) {マトロイド};
         \node[block,above=7em of MTR] (MI) {マトロイド交差};
         \node[block,above=3em of MCF, xshift=7em] (SFM) {劣モジュラ最小化};
@@ -14,7 +14,7 @@
             (BM) -> {(WBM), (NF)} -> (MCF);
             {(MTR), (BM)} -> (MI);
             % (NF) -> (MC);
-            {(MCF), (MC), (MI)} -> (SFM);
+            {(MCF), (MI)} -> (SFM);
         };
         \begin{scope}[on background layer]
             \node[mysubset, fit=(BM) (WBM), "二部マッチング" {below, UniBlue}]{};
@@ -28,22 +28,30 @@
     \frametitle{各回の内容（予定）} 
     \small
     \begin{enumerate}
-        \item (10/23) イントロ+多面体的組合せ論（線形計画法の復習，整数多面体，完全単模行列）
-        \item (10/30) 二部マッチング①（Konig-Egervaryの定理，増加道アルゴリズム，ハンガリー法）
-        \item (11/6) 二部マッチング②（最短路問題の復習，逐次最短路法と主双対法，最適性基準からの見方）
-        % \item[] \alert{(11/13) 休み}
-        % \item[] \textcolor{gray}{(11/20) 休み}
-        % \item[] \textcolor{gray}{(11/27) 休み}
-        \item (12/9) 最大流① （定式化，最大流最小カット定理，応用例）
-        \item (12/16) 最大流②（残余ネットワーク，Ford--Fulkerson法，Edmonds--Karpのアルゴリズム）
+        \item (4/23) \textbf{イントロ+多面体的組合せ論（線形計画法の復習，整数多面体，完全単模行列）}
+        \item[] \textcolor{gray}{(4/30) 休み}
+        \item (5/7) 二部マッチング①（Konig-Egervaryの定理，増加道アルゴリズム，ハンガリー法）
+        \item (5/14) 二部マッチング②（最短路問題の復習，逐次最短路法と主双対法，最適性基準からの見方）
+        \item (5/21) 最大流① （定式化，最大流最小カット定理，応用例）
+        \item (5/28) 最大流②（残余ネットワーク，Ford--Fulkerson法，Edmonds--Karpのアルゴリズム）
+        \item[] \textcolor{gray}{(6/4) 休み}
         % \item[] \sout{(12/11) 最小カット（永持茨木のアルゴリズム，Kargerのアルゴリズム）}
-        \item (12/23) 最小費用流（定式化，輸送問題，最大流との関係，逐次最短路法，容量スケーリング法）
-        \item[] \textcolor{gray}{(1/1) 休み}
-        \item[] \textcolor{gray}{(1/15) 休み}
-        \item \textbf{(1/22) マトロイド（定義と公理系，貪欲法，マトロイド多面体） }
-        \item (1/22) 独立マッチング・マトロイド交差 （定義，応用例，Edmondsの最大最小定理，増加道アルゴリズム）
-        \item (2/5) 劣モジュラ関数（諸例，劣モジュラ基多面体，Lov\'asz拡張，劣モジュラ最小化）
-        % \item (2/12) 劣モジュラ関数②（劣モジュラ最大化，近似アルゴリズム，貪欲法）
-        \item[] \textcolor{gray}{(2/12) 予備}
+        \item (6/11) 最小費用流①（定式化，輸送問題，最大流との関係）
+        \item[] \textcolor{gray}{(6/18) 休み}
+        \item[] \textcolor{gray}{(6/25) 休み}
+        \item (7/2) 最小費用流②（逐次最短路法，容量スケーリング法）
+        \item (7/9) マトロイド（定義と公理系，貪欲法，マトロイド多面体） 
+        \item (7/16) 独立マッチング・マトロイド交差 （定義，応用例，Edmondsの最大最小定理，増加道アルゴリズム）
+        \item[] \textcolor{gray}{(7/23) 休み}
+        \item (7/30) 劣モジュラ関数①（諸例，劣モジュラ基多面体，Lov\'asz拡張，劣モジュラ最小化）
+        \item (8/6) 劣モジュラ関数②（劣モジュラ最大化，近似アルゴリズム，貪欲法）
+        \item (どこか) 精選トピック①
+        \item (どこか) 精選トピック②
     \end{enumerate}
+
+    \bigskip
+    \begin{itemize}
+        \item レポート課題を6月と期末に出す予定
+        \item 精選トピックの日時は今後調整 
+    \end{itemize}
 \end{frame}

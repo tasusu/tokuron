@@ -6,7 +6,7 @@
 \title{組合せ最適化特論}
 \subtitle{第1回（多面体的組合せ論）}
 \author{担当: \textbf{相馬 輔}}
-\date{2025/10/23}
+\date{2026/04/23}
 
 \begin{document}
 \maketitle
@@ -302,7 +302,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[t]
     \frametitle{双対問題・強双対定理}
     \begin{columns}[T]
     \begin{column}{.45\textwidth}
@@ -327,8 +327,19 @@
     \end{column}
     \end{columns}
     
-    \vfill
-    \pause
+    \begin{overlayarea}{\textwidth}{3em}
+    \only<2>{
+        \small
+        \begin{lemma}[弱双対性]
+        主問題(P)の実行可能解$x$と双対問題(D)の実行可能解$y$に対し，$c^\top x \leq b^\top y$が成り立つ．
+        \end{lemma}
+        \begin{proof}
+            $
+            c^\top x \leq (A^\top y)^\top x = y^\top (Ax) \leq y^\top b \qed
+            $
+        \end{proof}
+    }
+    \only<3>{
     \begin{theorem}[強双対定理]
         主問題(P)と双対問題(D)がともに実行可能ならば，主問題(P)に最適解$x^*$，双対問題(D)に最適解$y^*$が存在して
         $
@@ -336,6 +347,62 @@
             $
             が成り立つ．
     \end{theorem}
+    }
+    \end{overlayarea}
+\end{frame}
+
+\begin{frame}
+    \frametitle{相補性条件}
+
+    \small
+    \begin{columns}[T]
+    \begin{column}{.75\textwidth}
+    \begin{lemma}
+        主問題(P)の実行可能解$x$と双対問題(D)の実行可能解$y$に対し，$x$と$y$がそれぞれの最適解 \\ 
+        $\iff$ 
+            $(A^\top y - c)^\top x = 0$
+            かつ 
+            $(b - Ax)^\top y = 0$  
+    \end{lemma}
+
+    \begin{proof}<2->
+    実行可能解$(x,y)$に対して，
+    \setlength{\abovedisplayskip}{4pt}
+    \setlength{\belowdisplayskip}{4pt}
+    \[
+        c^\top x \leq (A^\top y)^\top x = y^\top (Ax) \leq y^\top b.
+    \]
+    
+    \onslide<3->
+    \bigskip
+    $(x,y)$が最適解ならば，強双対定理から$c^\top x = y^\top b$なので，途中の不等号はすべて等号．よって
+    \[
+        c^\top x = (A^\top y)^\top x, \quad y^\top (Ax) = y^\top b
+    \]
+    が成り立つ．逆も同様．
+    \end{proof}
+    \end{column}
+    \begin{column}{.2\textwidth}
+    \onslide<1->
+    \footnotesize
+    \begin{primal}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{max} & \quad  c^\top x \\
+            \text{s.t.} & \quad A x \leq b  \\
+            & \quad x \geq 0 
+        \end{alignat*}
+    \end{primal}
+    \begin{dual}
+        \setlength{\abovedisplayskip}{0pt}
+        \begin{alignat*}{2}
+            \text{min} & \quad  b^\top y \\
+            \text{s.t.} & \quad A^\top y \geq c  \\
+            & \quad y \geq 0 
+        \end{alignat*}
+    \end{dual}
+    \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}
@@ -345,30 +412,22 @@
     \begin{columns}[T]
     \begin{column}{.75\textwidth}
     \begin{theorem}[相補性条件]
-        主問題(P)の実行可能解$x$と双対問題(D)の実行可能解$y$に対し，$x$と$y$がそれぞれの最適解 \\ 
-        $\iff$ 
-            $(A^\top y - c)^\top x = 0$
-            かつ 
-            $(b - Ax)^\top y = 0$  
+        主問題(P)の実行可能解$x$と双対問題(D)の実行可能解$y$に対し，$x$と$y$がそれぞれの最適解 
+        \[ 
+            \iff
+            \begin{cases}
+        (A^\top y - c)_j x_j = 0  & (j = 1, \dots, n) \\
+        (b - Ax)_i y_i = 0        & (i = 1, \dots, m)
+            \end{cases}
+        \]
     \end{theorem}
 
-    \onslide<2->{
-    \structure{証明} \\
-    実行可能解$(x,y)$に対して，
-    \setlength{\abovedisplayskip}{4pt}
-    \setlength{\belowdisplayskip}{4pt}
+    \begin{proof}<2->
     \[
-        c^\top x \leq (A^\top y)^\top x = y^\top (Ax) \leq y^\top b
+            (A^\top y - c)^\top x = 0, \quad (b - Ax)^\top y = 0  
     \]
-    が常に成り立つ（弱双対性）．
-    }
-    \onslide<3->{
-    $(x,y)$が最適解ならば，強双対定理から$c^\top x = y^\top b$なので，途中の不等号はすべて等号．よって
-    \[
-        c^\top x = (A^\top y)^\top x, \quad y^\top (Ax) = y^\top b
-    \]
-    が成り立つ．移項すると相補性条件が出る．逆も同様． \qed
-    }
+    において，$A^\top y - c \geq 0$, $x \geq 0$, $b - Ax \geq 0$, $y \geq 0$なので，各成分の積は非負．よって全て0．
+    \end{proof}
     \end{column}
     \begin{column}{.2\textwidth}
     \footnotesize
@@ -585,8 +644,8 @@
     二部マッチングのLPの係数行列$A$は完全単模行列．
     \end{lemma}
 
-    \onslide<2->{
-    \structure{証明} $k \times k$小行列式$=0,\pm 1$であることを，$k$に関する帰納法で示す．
+    \begin{proof}<2->
+    $k \times k$小行列式$=0,\pm 1$であることを，$k$に関する帰納法で示す．
 
     $k=1$のときは，$A$の成分は$0,1$なので明らか．
 
@@ -597,7 +656,7 @@
     \item<4-> $A'$に$1$が1つだけ含まれる列がある場合: 余因子展開すれば，$(k-1)\times(k-1)$小行列$A''$を用いて，$\det A' = \pm \det A''$．帰納法の仮定より$\det A'' \in \{0, \pm 1\}$なのでOK．
     \item<5-> $A'$のどの列にも$1$が2つ含まれる場合: 左側の頂点に$+1$，右側の頂点に$-1$をおいた行ベクトル$v$を考えると，$v A' = 0$．よって，$A'$は正則ではないので，$\det A' = 0$． \qed
    \end{itemize} 
-    }
+    \end{proof}
     \end{column}
     \begin{column}{.3\textwidth}
         \centering
@@ -688,7 +747,7 @@
     \end{theorem}
     
     \pause
-    \structure{証明} \\
+    \begin{proof}
     $x$を$P$の端点とする．$x$は，$(\tilde A, \tilde b)$から$n$行を抜き出して得られる正則行列$A'$と部分ベクトル$b'$に対して，線形方程式$A' x = b'$の解$x = (A')^{-1}b'$として得られる．
 
     \pause
@@ -698,8 +757,8 @@
     \]
     {\footnotesize ※$\Delta_{j,i} A' = A'$の$(j,i)$余因子}
 
-    $b'$は整数ベクトルなので，$(A')^{-1}b'$も整数ベクトル． \qed
-
+    $b'$は整数ベクトルなので，$(A')^{-1}b'$も整数ベクトル． 
+    \end{proof}
 \end{frame}
 
 \begin{frame}
@@ -726,10 +785,11 @@
     \end{columns}
 
     \pause \vfill
-    \structure{証明} \\
+    \begin{proof}
     前定理より，(P)の実行可能領域$P$は整数多面体である．
     いま，(P)が最適解をもつので，特に$P$の端点である最適解が存在する．
-    整数多面体の定義より，これは整数ベクトル． \qed
+    整数多面体の定義より，これは整数ベクトル． 
+    \end{proof}
 \end{frame}
 
 \end{document}

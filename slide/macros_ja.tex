@@ -42,8 +42,13 @@
 \deftranslation[to=japanese]{Fact}{事実}
 \deftranslation[to=japanese]{Proof}{証明}
 \deftranslation[to=japanese]{Corollary}{系}
-\def\proofname{証明}
 \setbeamertemplate{theorems}[normal font] %日本語の場合，定理内を斜体にしない
+% overlay-aware proof environment
+\renewenvironment<>{proof}{%
+\par
+\begin{actionenv}#1%
+\structure{(証明)}}
+{\qed\end{actionenv}}
 
 %Beamer色設定
 \definecolor{UniBlue}{RGB}{0,150,200}
