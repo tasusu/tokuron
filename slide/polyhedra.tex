@@ -792,4 +792,29 @@
     \end{proof}
 \end{frame}
 
+\begin{frame}{二部マッチング多面体}
+    \small
+    マッチング$M$の\alert{特性ベクトル (characteristic vector)} 
+    $\ones_M \in \{0, 1\}^E$を次のように定める:
+    \[
+        (\ones_M)_e =
+        \begin{cases}
+            1 & (e \in M) \\
+            0 & (e \notin M)
+        \end{cases}
+    \]
+    {\footnotesize ※$\chi_M$と書く流儀もある}
+
+    \bigskip
+    二部マッチング多面体: $P = \conv\{\ones_M : \text{$M$は$G$のマッチング}\}$
+
+    \bigskip
+    \begin{theorem}
+        二部マッチング多面体は次の線形不等式系で表される．
+        \begin{align*}
+            \sum_{e \in \delta(i)} x_e \leq 1 & \quad (i \in V) \\
+            x_e \geq 0 & \quad (e \in E)
+        \end{align*}
+    \end{theorem}
+\end{frame}
 \end{document}

@@ -5,7 +5,7 @@
 \title{組合せ最適化特論}
 \subtitle{第2回（二部マッチング①）}
 \author{担当: \textbf{相馬 輔}}
-\date{2025/10/30}
+\date{2026/05/07}
 
 \begin{document}
 \maketitle
@@ -200,7 +200,9 @@
     \begin{lemma}[弱双対性]
         任意のマッチング$M$と頂点被覆$(S,T)$に対し，$\abs{M} \leq \abs{S} + \abs{T}$.
     \end{lemma}
-    \structure{(証明)} $M$は端点を共有しないので，$M$を被覆するには少なくとも$\abs{M}$個の頂点が必要．\qed
+    \begin{proof}
+        $M$は端点を共有しないので，$M$を被覆するには少なくとも$\abs{M}$個の頂点が必要．
+    \end{proof}
 \end{frame}
 
 \begin{frame}
@@ -292,7 +294,7 @@
     \end{lemma}
 
     \pause
-    \structure{証明} \\
+    \begin{proof} 
     \newcommand{\M}{\textcolor{AlertOrange}{M}}
     \newcommand{\Mp}{\textcolor{UniGreen}{M'}}
     2つのマッチング$\M$, $\Mp$ ($\abs\M < \abs\Mp$) を取る．
@@ -317,7 +319,8 @@
         }} 
         \end{tabular}
     \end{center}
-    いま，$\abs\M < \abs\Mp$より，$\M + \Mp$の連結成分の中に，交互道で始点と終点が$\M$の端点でないものが存在する．これは$\M$に対する増加道． \qed
+    いま，$\abs\M < \abs\Mp$より，$\M + \Mp$の連結成分の中に，交互道で始点と終点が$\M$の端点でないものが存在する．これは$\M$に対する増加道． 
+    \end{proof}
 \end{frame}
 
 \begin{frame}
@@ -485,11 +488,11 @@
         とすると，$(S,T)$は最小頂点被覆．
     \end{theorem}
 
-    \onslide<2->{
-    \structure{（証明）} 全ての枝は右向きに進めるので，$(S,T)$は定義から頂点被覆．
+    \begin{proof}<2-> 
+        全ての枝は右向きに進めるので，$(S,T)$は定義から頂点被覆．
     また，増加道が存在しないので，$X \cap U^- = \emptyset$.
-    ゆえに$(S,T)$の全ての頂点は$M$の枝を1本だけ被覆しているので，$|S|+|T|=|M|$.  \qed
-    }
+    ゆえに$(S,T)$の全ての頂点は$M$の枝を1本だけ被覆しているので，$|S|+|T|=|M|$.
+    \end{proof}
 
     \bigskip
     \onslide<3->{K\H{o}nig--Egerv\'aryの定理の，LPを使わないアルゴリズム的証明が得られた．}
@@ -634,8 +637,9 @@
     \begin{lemma}
         $G_y$に\textbf{完全}マッチングが存在すれば，それは最大重みマッチング．
     \end{lemma}
-    \structure{証明} 相補性条件！\qed
-
+    \begin{proof} 
+        相補性条件！
+    \end{proof}
 \end{frame}
 
 \begin{frame}
@@ -649,7 +653,8 @@
     
     \pause
     \begin{lemma}
-        $D_M(y)$を$G_y$に対する重みなしマッチングで使う有向グラフとし，$D_M(y)$における$U^+$から到達可能な頂点全体を$X$とする．
+        $D_M(y)$: $G_y$に対する重みなしマッチングで使う有向グラフ\\ 
+        $X$: $D_M(y)$における$U^+$から到達可能な頂点全体\\
             $\eps := \min\{ y_i + y_j - w_e : e = ij \in E, i \in V^+ \cap X, j \in V^- \setminus X \}$ とする．
             $y'$を
             \setlength{\abovedisplayskip}{0pt}
@@ -872,7 +877,7 @@
 
 \end{frame}
 
-\begin{frame}{ハンガリー法の解析}
+\begin{frame}{ハンガリー法の計算量解析}
 
     \small
     \begin{theorem}
@@ -881,21 +886,20 @@
     \end{theorem}
 
     \pause
+    \begin{proof}
     \begin{itemize}[<+->]
         \item アルゴリズムの実行中に$|M|$は減らない．
         \begin{itemize}
-            \item ($\because$) $y$が更新されて$y'$になったとき，$G_y$の最大マッチング$M$は$G_{y'}$でもマッチング．
+            \item[($\because$)] $y$が更新されて$y'$になったとき，$G_y$の最大マッチング$M$は$G_{y'}$でもマッチング．
         \end{itemize}
         $\longrightarrow$ $M$は高々$n/2$回更新される．
 
         \item また，$|M|$が増えず$y$だけが更新されるとき，$\eps$の定義のminを達成する枝により，到達可能集合$X$が真に拡大する．\\
         $\longrightarrow$ 高々$n$回の$y$の更新後に，$|M|$は増える．
-
-        \item ∴全体では$O(n^2)$回の反復．
     \end{itemize}
-
-    \vfill
-    \onslide<4->
+    \pause
+    ∴全体では$O(n^2)$回の反復．
+    \end{proof}
 \end{frame}
 
 \end{document}
