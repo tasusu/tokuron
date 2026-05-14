@@ -5,12 +5,10 @@
 \title{組合せ最適化特論}
 \subtitle{第3回（二部マッチング②）}
 \author{担当: \textbf{相馬 輔}}
-\date{2025/11/6}
+\date{2026/05/14}
 
 \begin{document}
 \maketitle
-
-\input{flowchart}
 
 \begin{frame}<1>[label=outline]{目次}
 \begin{tikzpicture}
@@ -62,18 +60,34 @@
 \againframe<2|handout:0>{outline}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{最短路問題}
-     $G = (V, A)$: 有向グラフ, $s, t \in V$, $\ell: A \to \R$: 枝長
-
+    \begin{columns}[T]
+    \begin{column}{.6\textwidth}
+        $G = (V, A)$: 有向グラフ \\
+        $s, t \in V$: 始点・終点 \\
+        $\ell: A \to \R$: 枝長
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \small
+        \vspace{-1em}
+        \tikz{\graph[mygraph,no placement]{
+            menger;
+            {[edges={mypath}]
+                (s) -> (2) -> (5) -> (t); 
+            }
+        };
+        }
+    \end{column}
+    \end{columns}
      \bigskip
-     $P$: $s$--$t$路（$s$から$t$へ行く経路で，同じ頂点を複数回通っても良い） に対し，
+     $P$: $s$--$t$路（{\small $s$から$t$へ行く経路で，同じ枝や頂点を複数回通っても良い}） に対し，
      \[
-        \ell(P) := \sum_{e \in E(P)} \ell(e)
+        \ell(P) := \sum_{a \in A(P)} \ell(a)
      \]
      を$P$の長さとする．
      
      \bigskip
      \begin{block}{最短路問題}
-        $s$--$t$路$P$のうち，長さ$\ell(P)$最小のものを求めよ．
+        $s$--$t$路$P$で長さ$\ell(P)$最小のものを求めよ．
      \end{block} 
 \end{frame}
 
@@ -134,13 +148,30 @@
     \[ p(j) \leq p(i) + \ell(a). \]
 
     \bigskip\pause
-    \textbf{②$\implies$③:} 任意の有向閉路$C: v_0;v_1;\dots;v_k = v_0$に対して，
+    \textbf{②$\implies$③:} 任意の有向閉路$C: v_0 \to v_1 \to \dots \to v_k = v_0$に対して，
     \[ 
         \ell(C) = \sum_{i=1}^k \ell(v_{i-1}v_i) \geq \sum_{i=1}^k (p(v_i) - p(v_{i-1})) = 0. 
     \]
 
     \bigskip\pause
     \textbf{③$\implies$①:} すでにやった． \qed
+\end{frame}
+
+\begin{frame}{ポテンシャルの存在と負閉路}
+    
+    \begin{theorem}
+        有向グラフ$G$と枝長$\ell: A \to \R$に対して，\\
+        ポテンシャル$p: V \to \R$が存在 $\iff$ 負閉路が存在しない
+    \end{theorem}
+    \begin{proof}
+        $G$に頂点$s$を追加し，$s$から$G$の全ての頂点へ枝を追加したグラフを$G'$とする．
+        新しい枝の長さを$0$と定めて$\ell$を拡張した枝長を，$\ell'$とする．このとき，
+        \begin{center}
+        $(G', \ell')$の負閉路 $\iff$ $(G, \ell)$の負閉路
+        \end{center}
+
+        ∴$(G', \ell')$に前補題を適用すればよい．
+    \end{proof}
 \end{frame}
 
 \begin{frame}{最短路問題のアルゴリズム}
@@ -155,7 +186,7 @@
     {\footnotesize\hfill ($n = |V|, m = |E|$)}
 
     \bigskip
-    これらは，$s$--$t$最短路だけでなく，実行可能ポテンシャル(=最短路長)も同時に求める．
+    これらは，$s$--$t$最短路だけでなく，実行可能ポテンシャルも同時に求める．
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -320,15 +351,15 @@ $P$を$U^+$--$U^-$最短路とし，$M^+ := M \triangle P$を更新後のマッ�
 \end{frame}
 
 \begin{frame}[t]{逐次最短路法の証明}
-    \small
-    {\footnotesize 
-    \postit{$M$: 大きさ$k$の最小重みマッチング \\ 
-    $P =$ $(D_M, \ell_M)$上の$U^+$--$U^-$最短路 \\ 
-    $M^+ := M \triangle P$: 更新後のマッチング}
-    }
 \newcommand{\M}{{\textcolor{AlertOrange}{M}}}
 \newcommand{\Mp}{{\textcolor{AlertOrange}{M^+}}}
 \newcommand{\N}{{\textcolor{UniGreen}{N}}}
+    \small
+    {\footnotesize 
+    \postit{$\M$: 大きさ$k$の最小重みマッチング \\ 
+    $P =$ $(D_M, \ell_M)$上の$U^+$--$U^-$最短路 \\ 
+    $\Mp := M \triangle P$: 更新後のマッチング}
+    }
 
 \structure{Claim.} 任意の大きさ$k+1$のマッチング$\N$に対し，$w(\Mp) \leq w(\N)$
 
@@ -416,7 +447,7 @@ $P$は最短路なので，$\ell_\M(P) \leq \ell_\M(Q)$.
     \begin{block}{主双対法}
         \begin{algorithmic}[1]
             \STATE $M := \emptyset$ \COMMENT{初期マッチング}
-            \STATE $p(i) := 0$ ($i \in V^+$), $p(j) := \min_{i \in \delta(i)} w(ij)$ ($j \in V^-$) \COMMENT{初期ポテンシャル}
+            \STATE $p(i) := 0$ ($i \in V^+$), $p(j) := \min_{i \in \delta(j)} w(ij)$ ($j \in V^-$) \COMMENT{初期ポテンシャル}
             \WHILE{$M$に対する増加道が存在する}
                 \STATE 簡約枝長$\ell_{M,p}$に関する$D_M$上の$U^+$--$U^-$最短路$P$と最短路長関数$d$を求める． 
                 \COMMENT{Dijkstra法で$O(m + n\log n)$時間}
@@ -443,20 +474,29 @@ $P$は最短路なので，$\ell_\M(P) \leq \ell_\M(Q)$.
     $p^+ := p + d$とする．{\footnotesize ($d: V \to \R$ ... $(D_M, \ell_{M,p})$上の（$U^+$からの）最短路長関数)}
 
     \bigskip
-    $d$は$(D_M, \ell_{M,p})$のポテンシャルなので，任意の枝$a = ij$に対し，
+    \structure{Claim.} $p^+$は$(D_M, \ell_M)$のポテンシャル 
+
+    \pause
+    {\footnotesize 
+        \structure{(∵)} $d$は$(D_M, \ell_{M,p})$のポテンシャルなので，任意の$D_M$の枝$a = ij$に対し，
     \begin{align*}
         d(j) - d(i) \leq \ell_{M,p}(a) = \ell_M(a) + p(i) - p(j)
     \end{align*}
-    が成り立つ．移項すると $p^+(j) - p^+(i) \leq \ell_M(a)$ となり，$p^+$は$(D_M, \ell_M)$のポテンシャルである．
+    が成り立つ．移項すると $p^+(j) - p^+(i) \leq \ell_M(a)$.
+    }
 
     \pause
     \bigskip
-    次に，$M \gets M \triangle P$と更新した後も$p^+$がポテンシャルであることを示す．
+    \structure{Claim.} $M^+ := M \triangle P$に対し，$p^+$は$(D_{M^+}, \ell_{M^+})$のポテンシャル
+
+    \pause
+    {\footnotesize \structure{(∵)} 
     最短路$P$上の枝$a = ij$では，上の不等式で等号が成立:
     \begin{align*}
         d(j) - d(i) = \ell_{M,p}(a) \quad \iff \quad p^+(j) - p^+(i) = \ell_M(a)
     \end{align*}
-    よって，$P$の枝を反転しても，$p^+$がポテンシャルであることは保たれる． \qed
+    よって，$M$の更新により$P$の枝が反転されても，$p^+$がポテンシャルであることは保たれる． }
+    \qed
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -608,11 +648,10 @@ $P$は最短路なので，$\ell_\M(P) \leq \ell_\M(Q)$.
         \end{enumerate}
     \end{lemma}
 
-    \small
-    \bigskip
-    \structure{(証明)} \\
-    \textbf{①$\iff$②:} $M$が最適 $\iff$ $\exists p$ s.t. $(M, p)$は相補性条件を満たす \\
-    \textbf{②$\iff$③:} 最短路問題のところでやった． \qed
+    \begin{proof} \\
+    \textbf{①$\iff$②:} $M$が最適 $\iff$ $\exists p$ s.t. $(M, p)$は最適性条件を満たす \\
+    \textbf{②$\iff$③:} 最短路問題のところでやった． 
+    \end{proof}
 \end{frame}
 
 
@@ -628,7 +667,7 @@ $P$は最短路なので，$\ell_\M(P) \leq \ell_\M(Q)$.
                     \RETURN $M$ 
                     \COMMENT{相補性条件より，$M$は最小重みマッチング}
                 \ELSE[{ポテンシャル$p$を更新}]
-                    \STATE \alt<1>{$X$を$D_M(p)$における$U^+$から到達可能な頂点全体とする．}{$G_p$の最小頂点被覆$(S,T)$を求める \COMMENT{$|S|+|T| < n$}}
+                    \STATE \alt<1>{$X$を$D_M(p)$における$U^+$から到達可能な頂点全体とする．}{$G_p$の最小頂点被覆$(S,T)$を求める \COMMENT{$|S|+|T| < n/2$}}
                     \STATE \alt<1>{$\eps := \min\{ w_{e} + p(i) - p(j) : e = ij, i \in V^+ \cap X, j \in V^- \setminus X \}$}{$\eps := \min\{ w_{e} + p(i) - p(j) : e = ij \in E \text{ s.t. $(S, T)$に被覆されていない} \}$}
                     \STATE $p(i) \gets \begin{cases}
                         p(i) - \eps & (i \in \alt<1>{X}{(V^+ \setminus S) \cup T}) \\

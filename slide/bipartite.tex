@@ -576,17 +576,17 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{相補性条件}
+    \frametitle{最適性条件}
 
     \begin{columns}[T]
     \begin{column}{.6\textwidth}
-        \begin{lemma}[相補性条件]
+        \begin{lemma}[最適性条件]
         $M \subseteq E$, $y \in \R^V$が最適解 
         $\iff$
         \begin{enumerate}
             \item $M$は完全マッチング
             \item $y$は(D)の実行可能解
-            \item $y_i + y_j = w_e$ \quad ($e = ij \in M$)
+            \item $y_i + y_j = w_e$ \quad ($e = ij \in M$) \\ \hfill \alert{(相補性条件)}
         \end{enumerate}
         \end{lemma}
         
@@ -638,7 +638,7 @@
         $G_y$に\textbf{完全}マッチングが存在すれば，それは最大重みマッチング．
     \end{lemma}
     \begin{proof} 
-        相補性条件！
+        最適性条件！
     \end{proof}
 \end{frame}
 
