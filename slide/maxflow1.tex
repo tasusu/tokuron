@@ -5,7 +5,7 @@
 \title{組合せ最適化特論}
 \subtitle{第4回（最大流①）}
 \author{担当: \textbf{相馬 輔}}
-\date{2025/12/9}
+\date{2026/5/21}
 
 \begin{document}
 \maketitle
@@ -425,8 +425,9 @@
 
     \vfill
     \pause
-    \structure{(証明)}
-    枝容量$u \equiv 1$として$s$--$t$最大流を考えると，整数の$s$--$t$流は辺素$s$--$t$パスに対応する．整数性より，整数の$s$--$t$最大流が存在する．Mengerの定理は最大流最小カット定理に他ならない． \qed
+    \begin{proof}
+    枝容量$u \equiv 1$として$s$--$t$最大流を考える．整数の$s$--$t$流は辺素$s$--$t$パスに対応する．また，最大流問題の整数性より，整数の$s$--$t$最大流が存在する．よって，Mengerの定理は最大流最小カット定理に他ならない． 
+    \end{proof}
     % \structure{Connection to edge-connectivity}
     % \begin{corollary}
     %     $G$ is $k$-edge-connected \\
@@ -467,7 +468,7 @@
 
     \vfill
     \pause
-    \structure{(証明)}
+    \begin{proof}
     $s,t$以外の各頂点を以下のように変換したネットワークで，最大流最小カット定理を適用すればよい．
     \begin{center}
         \tikz[baseline=(v.base)]{
@@ -496,7 +497,7 @@
         \path (v2) -- (a) node[midway, above, sloped]{\footnotesize $+\infty$};
         }
     \end{center}
-    \qed
+    \end{proof}
 \end{frame}
 
 \begin{frame}{Mengerの定理（無向・点素ver）}
@@ -532,7 +533,9 @@
         点素$s$--$t$パスの最大本数
         $= \min\{ |U| : U \subseteq V \text{は$s$と$t$を分離} \}$
     \end{block}
-    \structure{(証明)} 各枝を両方向に向きづけた有向グラフに対し，有向・点素Mengerを使う． \qed
+    \begin{proof}
+     各枝を両方向に向きづけた有向グラフに対し，有向・点素Mengerを使う． 
+    \end{proof}
 \end{frame}
 
 \begin{frame}{Mengerの定理（無向・辺素ver）}
@@ -565,21 +568,21 @@
     \end{column}
     \end{columns}
 
-    \structure{(証明)}
-    各枝を以下のように変換した有向グラフで，有向・辺素Mengerを適用すればよい．
-    \begin{center}
-        \tikz[baseline=(i.base)]{
-        \graph[mygraph, math nodes, grow right=5em, branch down=1.5em]{ i -- j };}
-        \qquad $\longrightarrow$ \qquad
-        \tikz[baseline=(i.base)]{
-        \graph[mygraph, math nodes, no placement]{
-            subgraph I_n[V={1,j,2,i}, clockwise];
-            i -> 1 -> 2 -> j;
-            j -> 1 -> 2 -> i;
-        };
-        }
-    \end{center}
-    \qed
+    \begin{proof}
+        各枝を以下のように変換した有向グラフで，有向・辺素Mengerを適用すればよい．
+        \begin{center}
+            \tikz[baseline=(i.base)]{
+            \graph[mygraph, math nodes, grow right=5em, branch down=1.5em]{ i -- j };}
+            \qquad $\longrightarrow$ \qquad
+            \tikz[baseline=(i.base)]{
+            \graph[mygraph, math nodes, no placement]{
+                subgraph I_n[V={1,j,2,i}, clockwise];
+                i -> 1 -> 2 -> j;
+                j -> 1 -> 2 -> i;
+            };
+            }
+        \end{center}
+    \end{proof}
 \end{frame}
 
 \subsection{二部マッチング}
@@ -723,11 +726,11 @@
     
     \begin{itemize}
         \item BALは脱落している． \\
-        \structure{∵} BALの現在の勝ち数~$86$ $+$ 残り試合数~$5$ $<$ NYYの現在の勝ち数~$93$  \qed
+        \structure{(∵)} BALの現在の勝ち数~$86$ $+$ 残り試合数~$5$ $<$ NYYの現在の勝ち数~$93$  \qed
 
         \pause
         \item BOSは脱落している．\\
-        \structure{∵} BOSが残り全勝すると， $89 + 4 = 93$勝. \\
+        \structure{(∵)} BOSが残り全勝すると， $89 + 4 = 93$勝. \\
         もしNYYが1勝でもすれば，BOSを上回る．\\
         一方，NYYが全敗したとすると，TORが$88 + 6 = 94$勝でBOSを上回る． \qed
     \end{itemize}
