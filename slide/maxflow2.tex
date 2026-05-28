@@ -5,7 +5,7 @@
 \title{組合せ最適化特論}
 \subtitle{第5回（最大流②）}
 \author{担当: \textbf{相馬 輔}}
-\date{2025/12/16}
+\date{2026/5/28}
 
 \begin{document}
 \maketitle
@@ -351,11 +351,10 @@
     \small
     \structure{増加道が存在しない $\implies$ $\varphi$は最大流:} 
 
-    $X$を$G_\varphi$において$s$から到達可能な頂点集合とする．
-    すると，$G_\varphi$において$X$から出る枝は存在しない．
-
     \bigskip
-    ゆえに，以下が成り立つ:
+    $X$を残余ネットワーク$G_\varphi$において$s$から到達可能な頂点集合とする．
+    すると，$G_\varphi$において$X$から出る枝は存在しないことから，
+    以下が成り立つ:
     \begin{itemize}
         \item $G$において$X$から出る枝$a \in \Out(X)$に対し，$\varphi(a) = u(a)$
         \item $G$において$X$に入る枝$a \in \In(X)$に対し，$\varphi(a) = 0$
@@ -378,7 +377,7 @@
     \begin{algorithmic}[1]
         \STATE $\varphi \equiv 0$.
         \WHILE {残余ネットワーク$G_\varphi$に増加道$P$が存在}
-            \STATE $\eps \leftarrow \min_{a \in P} c_\varphi(a)$ \textcolor{gray}{\footnotesize \dotfill $P$に沿って増加できる最大の$\eps$}
+            \STATE $\eps \leftarrow \min_{a \in P} c_\varphi(a)$ \textcolor{gray}{\footnotesize \dotfill $P$に沿った最大の増加量}
             \STATE $\varphi(a) \gets 
             \begin{cases}
                 \varphi(a) \textcolor{UniBlue}{{}+\eps} & a \in P \cap \Aphiup \\
@@ -555,7 +554,7 @@
     Ford--Fulkerson法において，\alert{枝数が最小の増加道}を選ぶ． 
     
     \bigskip
-    たとえば，幅優先探索で$s$--$t$パスを探索すればよい．
+    （たとえば，幅優先探索で$s$--$t$パスを探索すればよい）
 
     \bigskip
     \begin{theorem}[Edmonds--Karp, 1972]
@@ -582,20 +581,31 @@
 \begin{frame}{Edmonds--Karp法の解析}
     \structure{(証明)}
     背理法．$d(i) > d^+(i)$となる頂点$i$が存在すると仮定する．
-    そのような頂点$i$の中で$d^+(i)$が最小のものを取る．{\footnotesize ($i \neq t$)}
+    そのような頂点$i$の中で$d^+(i)$が最小のものを取る（\textbf{最小反例}）．
     
+    \smallskip
+    $d(t) = d^+(t) = 0$より$i \neq t$.
+    
+    \pause
     \bigskip
-    $j$: $G_{\varphi^+}$において$i$から$t$までの最短路における$i$の直後の頂点 
-    
+    $j :=$ $G_{\varphi^+}$の$i$から$t$への最短路における$i$の直後の頂点　とする． \\
+
+    このとき，次が成立:
+    \begin{itemize}
+        \item $d(j) \leq d^+(j)$ \hfill ($i$の最小性から)
+        \item $d^+(i) = d^+(j) + 1$ \hfill ($j$の定義から)
+    \end{itemize}
+
+    \pause
     \bigskip
     \structure{Claim.} $ij \notin A_{\varphi}$ \\
     {\small \structure{(∵)} もし$ij \in A_{\varphi}$ならば，
     \[
-        d(i) \leq d(j) + 1 \leq d^+(j) + 1 = d^+(i) < d(i)
+        d(i) \leq d(j) + 1 \leq d^+(j) + 1 = d^+(i) 
     \]
-    となり矛盾．\qed
+    となり，そもそもの仮定$d(i) > d^+(i)$に矛盾． 
+    \qed
     }
-
 \end{frame}
 
 \begin{frame}{Edmonds--Karp法の解析}
@@ -604,8 +614,8 @@
     \bigskip
     したがって，
     \begin{itemize}
-        \item $ji$が$G_\varphi$に存在し，その逆向き枝$ij$は存在しない．
-        \item また，更新後の$G_{\varphi^+}$に$ij$が現れているので，$ji$は$G_\varphi$の最短路$P$に含まれていたことになる．よって，\highlight{$d(j) = d(i) + 1$}.
+        \item 更新前の$G_\varphi$には$ji$が存在し，その逆向き枝$ij$は存在しない．
+        \item 一方，更新後の$G_{\varphi^+}$に$ij$が現れているので，$ji$は$G_\varphi$の最短路$P$に含まれていたことになる． \hfill ∴\highlight{$d(j) = d(i) + 1$}.
     \end{itemize}
 
     \bigskip
@@ -613,7 +623,7 @@
     \begin{align*}
         d(i) &= d(j) - 1  \tag{上式を移項}\\ 
              &\leq d^+(j) - 1 \tag{$d(j) \leq d^+(j)$} \\
-             &= d^+(i) - 2 \tag{$j$は$G_{\varphi^+}$において$i$の直後の頂点}
+             &= d^+(i) - 2 \tag{$d^+(i) = d^+(j) + 1$}
     \end{align*}
     となり，そもそもの仮定$d(i) > d^+(i)$に矛盾．
     \qed
@@ -633,13 +643,10 @@
 
 \begin{frame}{Edmonds--Karp法の解析}
     \small
-
     \begin{theorem}[Edmonds--Karp]
         任意の枝容量に対し，Edmonds--Karp法は$O(mn)$回の反復で終了する．したがって，$O(m^2 n)$時間で最大流と最小カットを求められる．
     \end{theorem}
-
-
-    \structure{(証明)}
+    \begin{proof}
     $ij \in A_\varphi$が，更新後に$ij \notin A_{\varphi^+}$となったとき，$ij$は\alert{飽和}したという．
 
     \begin{itemize}[<+->]
@@ -656,7 +663,7 @@
     \bigskip
     \onslide<+->
     よって，距離ラベルの単調性と合わせると，各枝は高々$n/2$回飽和しうる．ゆえに全体の反復は$O(mn)$回． 
-    \qed
+    \end{proof}
 \end{frame}
 
 \begin{frame}{Edmonds--Karp法の解析}
