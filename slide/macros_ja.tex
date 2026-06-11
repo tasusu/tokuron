@@ -117,15 +117,15 @@
 \algsetup{linenosize=\color{fg!50}\footnotesize}
 \renewcommand\algorithmicdo{:}
 \renewcommand\algorithmicthen{:}
+\renewcommand\algorithmicelse{\textbf{else}:}
 \renewcommand\algorithmicrequire{\textbf{Input:}}
 \renewcommand\algorithmicensure{\textbf{Output:}}
 \renewcommand\algorithmiccomment[1]{\hfill\textcolor{fg!50}{\footnotesize\textit{// #1}}}
 
 % TikZ
 \usepackage{tikz}
-\usetikzlibrary{positioning,shapes,arrows,quotes,shapes.callouts,calc,graphs,graphs.standard,fit,backgrounds,perspective,matrix}
-\tikzset{point/.style={circle, fill=AlertOrange, inner sep=1pt, text width=1pt}}
-\tikzset{bpoint/.style={circle, fill=black, inner sep=1pt, text width=1pt}}
+\usetikzlibrary{positioning,shapes,arrows,quotes,shapes.callouts,calc,graphs,graphs.standard,fit,backgrounds,perspective,matrix,decorations.pathmorphing,decorations.pathreplacing,decorations.shapes}
+\tikzset{point/.style={circle, fill, inner sep=1pt, text width=1pt}}
 \tikzset{alt/.code args={<#1>#2#3}{\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}}}
 \tikzset{>=latex}
 \tikzset{mynodes/.style={circle,white,fill=UniBlue!90,text width=.8em,inner sep=0pt,text centered,font=\footnotesize}}

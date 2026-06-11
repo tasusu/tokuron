@@ -5,7 +5,7 @@
 \title{組合せ最適化特論}
 \subtitle{第6回（最小費用流）}
 \author{担当: \textbf{相馬 輔}}
-\date{2025/12/23}
+\date{2026/6/11}
 
 \begin{document}
 \maketitle
@@ -88,6 +88,38 @@
     特に，$b \equiv 0$のとき，$\varphi$は\alert{循環流 (circulation)}と呼ばれる．
 \end{frame}
 
+\begin{frame}[label=flow-example]{例}
+    \textcolor{UniBlue}{$\varphi$}: 流量 / $u$: 容量 \\
+    頂点の数字: \textcolor{UniGreen}{$b$}
+
+    \begin{center}
+    \begin{tikzpicture}[scale=1.6]
+
+        \graph[no placement, mygraph]{
+            s[at={(0,0)},  "$+7$" {UniGreen, left }];
+            a[at={(2, 1)}, "$0$"  {UniGreen, above}];
+            b[at={(2,-1)}, "$0$"  {UniGreen, below}];
+            c[at={(4, 1)}, "$0$"  {UniGreen, above}];
+            d[at={(4,-1)}, "$-2$" {UniGreen, below}];
+            t[at={(6, 0)}, "$-5$" {UniGreen, right}];
+        };
+        \foreach \i/\j/\f/\u in {
+            s/a/5/5,
+            s/b/2/3,
+            a/b/1/2,
+            a/c/3/3,
+            a/d/1/2,
+            b/d/3/4,
+            c/t/4/5,
+            d/c/1/1,
+            d/t/1/3
+        } {
+            \path[myedges,->] (\i) edge node[above, midway, sloped] {\small \textcolor{UniBlue}{$\f$} / $\u$} (\j);
+        }
+    \end{tikzpicture}
+    \end{center}
+\end{frame}
+
 \begin{frame}{最小費用流問題}
 
     \begin{itemize}
@@ -133,6 +165,18 @@
         \end{alignat*}
         }
     \end{dual}
+\end{frame}
+
+\begin{frame}{最小費用流の整数性}
+    主問題(P)の係数行列は$G$のネットワーク行列であり，したがって完全単模行列である．
+
+    完全単模行列とLPの整数性（第1回参照）から，以下の定理が従う．
+
+    \bigskip
+    \begin{theorem}
+        枝容量$u$と境界$b$がともに整数値だとする．
+        このとき，最小費用流問題が実行可能であれば，整数値の最小費用流が存在する．
+    \end{theorem}
 \end{frame}
 
 
@@ -200,6 +244,8 @@
 
     \bigskip
     \small
+    \begin{columns}
+    \begin{column}{.6\textwidth}
     \begin{itemize}
         \item 容量: $u \equiv +\infty$ 
         \item 境界:
@@ -211,6 +257,29 @@
         \end{cases}$ 
         \item 費用 $c = \ell$ (最短路問題の枝長)
     \end{itemize}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+    \begin{tikzpicture}[xscale=.7]
+        \graph[no placement, mygraph]{flowexample};
+        \foreach \i/\j/\f/\u in {
+            s/a/5/5,
+            s/b/2/3,
+            a/b/2/2,
+            a/c/3/3,
+            d/a/0/2,
+            b/d/4/4,
+            c/t/4/5,
+            d/c/1/1,
+            d/t/3/3
+        } {
+            \path[draw,myedges,->] (\i) -- (\j);
+        }
+        \node[UniGreen, left=1pt of s]{$-1$};
+        \node[UniGreen, right=1pt of t]{$+1$};
+    \end{tikzpicture}
+    \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Hitchcock型輸送問題}
@@ -281,7 +350,7 @@
             \node[above=1pt of a1, font=\footnotesize, align=center] {$A$};
             \node[above=1pt of 1, font=\footnotesize, align=center] {$V$};
             \node[left=1pt of a1, font=\footnotesize, align=center] {$u(a)$};
-            \node[right=1pt of 2, font=\footnotesize, align=center] {$u(\Out(i)) - b(i)$};
+            \node[right=1pt of 2, font=\footnotesize, align=center] {$u(\Out(j)) - b(j)$};
         \end{tikzpicture}
     \end{column}
     \end{columns}
@@ -291,13 +360,8 @@
 
 \begin{frame}{輸送問題と最小費用流}
     \small
-    \begin{lemma}
-        $n$頂点, $m$枝の最小費用流問題は，$n+m$頂点, $2m$枝のHitchcock型輸送問題に帰着できる．
-    \end{lemma}
-
     \begin{columns}[T]
     \begin{column}{.65\textwidth}
-    \structure{(証明)}
     $(G, u)$上の$b$流$\varphi$に対し，
     \begin{align*}
         p(a, i) &:= u(a) - \varphi(a) \\
@@ -438,7 +502,7 @@
     \pause\vfill
     \structure{(復習)}
     $p: V \to \R$が枝長$\ell: A \to \R$に関する\alert{ポテンシャル} \\ 
-    $\defiff$ $p(i) - p(j) \leq \ell(a)$ \quad ($a=ij \in A$)
+    $\defiff$ $p(j) - p(i) \leq \ell(a)$ \quad ($a=ij \in A$)
 \end{frame}
 
 \begin{frame}{負閉路最適性条件}
@@ -460,11 +524,9 @@
     \textbf{①$\implies$②:}
     負閉路$C$に沿って$\varphi$を更新すると，$\varphi^+$は$b$流で，$c(\varphi^+) = c(\varphi) + \eps \ell_\varphi(C) < c(\varphi)$となり矛盾．
     
-    \pause
     \bigskip
     \textbf{②$\iff$③:} 最短路問題（第3回）でやった
 
-    \pause
     \bigskip
     \textbf{③$\implies$①:} LPの相補性条件から従う（次スライド）
 \end{frame}
@@ -488,7 +550,7 @@
     {\footnotesize \structure{(∵)} 
 
     \structure{$y \geq 0$:}
-    $\varphi(a) > 0$ のとき，$a^{-1}$が$G_\varphi$に存在するので，$x$がポテンシャルより
+    $\varphi(a) > 0$ のとき，$a^{-1}$が$G_\varphi$に存在するので，ポテンシャルの定義より
     \setlength{\abovedisplayskip}{3pt}
     \setlength{\belowdisplayskip}{3pt}
     \[
@@ -498,7 +560,7 @@
     
     \bigskip
     \structure{$x(j) - x(i) - y(a) \leq c(a)$:}
-    $\varphi(a) > 0$のときは，$y$の定義から自明に制約を満たす．$\varphi(a) = 0$のときは，$a$が$G_\varphi$に存在するので，ポテンシャル条件より
+    $\varphi(a) > 0$のときは，$y$の定義から自明に制約を満たす．$\varphi(a) = 0$のときは，$a$が$G_\varphi$に存在するので，ポテンシャルの定義より
     \[ 
         x(j) - x(i) \leq \ell_\varphi(a) = c(a)
     \] 
@@ -536,8 +598,8 @@
     \setlength{\abovedisplayskip}{3pt}
     \setlength{\belowdisplayskip}{3pt}
     \begin{align*}
-    x(j) - x(i) &\leq c(a) \\
-    x(i) - x(j) &\leq - c(a).
+    x(j) - x(i) &\leq \ell_\varphi(a) = c(a) \\
+    x(i) - x(j) &\leq \ell_\varphi(a^{-1}) = - c(a).
     \end{align*}
     ∴$x(j) - x(i) = c(a)$. ところが，これを$y$の定義に代入すると，$y(a) = 0$となってしまい矛盾．
     \qed}
@@ -582,21 +644,24 @@
 \section{アルゴリズム}
 \againframe<3|handout:0>{outline}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{アルゴリズム}
+\begin{frame}<1-2>[label=algs]{アルゴリズム}
     以下のアルゴリズムを紹介する:
 
-    \begin{itemize}
-        \item 逐次最短路法
+    \begin{itemize}[<alert@+(1)>]
+        \item 逐次最短路法 
+        {\footnotesize\color{gray} \dotfill 重み付き二部マッチングの自然な拡張}
         \item 主双対法
+        {\footnotesize\color{gray} \dotfill 重み付き二部マッチングの自然な拡張}
         \item 容量スケーリング
+        {\footnotesize\color{gray} \dotfill NEW!}
     \end{itemize}
     {\footnotesize cf. 最小重み二部マッチングに対する逐次最短路法・主双対法（第3回）}
 
     \bigskip
     \structure{仮定}
     \begin{itemize}
-        \item $b$, $u$は整数値
-        \item $c$は非負 \\
+        \item 境界$b$, 枝容量$u$は整数値
+        \item 費用$c$は非負 \\
         {\footnotesize 例えば，Hitchcock型輸送問題に帰着した後，費用$c' := c + M \ones$ ($M$:十分大) を考えればよい．}
     \end{itemize}
 \end{frame}
@@ -627,6 +692,36 @@
 
 \end{frame}
 
+% \begin{frame}{例：逐次最短路法}
+%     \centering
+%     \begin{tikzpicture}[scale=2]
+%         \graph[mygraph, no placement, math nodes]{
+%             1[at={(0,0)}];
+%             2[at={(1,1)}];
+%             3[at={(1,-1)}];
+%             4[at={(2,0)}];
+%         };
+%         \node[UniGreen, left=5pt of 1] {\small $+2$};
+%         \node[UniGreen, right=5pt of 4] {\small $-2$};
+%         \foreach \i/\j/\u/\c in {1/2/2/4, 1/3/2/2, 2/3/1/2, 2/4/3/3, 3/4/1/5} {
+%             \draw[->] (\i) -- node[above, sloped] {\footnotesize $/\u; \c$} (\j);
+%         }
+%     \end{tikzpicture}
+% \end{frame}
+% \end{document}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    次の2つの補題を示す．
+    
+    \begin{lemma}
+        逐次最短路法で求まる流を$0 = \varphi_0, \varphi_1, \cdots,\varphi_\mu$とする．このとき，各$k=0, 1, \dots, \mu$に対し，$\varphi_k$は最小費用$b'$流である（{\footnotesize ここで，$b' = \partial \varphi_k$}）．
+    \end{lemma}
+
+    \begin{lemma}
+        逐次最短路法の途中で，$U^+, U^- \neq \emptyset$かつ$G_\varphi$で$U^+$から$U^-$へ到達不能になったとする．このとき，$(G, u)$に$b$流は存在しない．
+    \end{lemma}
+\end{frame}
+
 \begin{frame}[t]{逐次最短路法の証明}
     \small
     \begin{lemma}
@@ -649,8 +744,36 @@ $\varphi$を最小費用$b'$流とし，$G_\varphi$で$U^+$から$U^-$へ到達�
 $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする．
 
 \bigskip
-\structure{Claim.} $\varphi^+$は最小費用$b''$流．\\
-\only<+>{\footnotesize \structure{(∵)} $G_{\varphi^+}$に負閉路が存在したと仮定．更新前の$G_\varphi$には負閉路がなかったので，図のような状況．すると，迂回路$P'$は$P$より長さが短いことになり矛盾． \qed}
+\structure{Claim.} $\varphi^+$は最小費用$b''$流．
+\end{frame}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    \small
+    \structure{Claim.} $\varphi^+$は最小費用$b''$流．
+
+    \bigskip
+    \structure{(∵)} 
+    負閉路最適性条件より，$G_{\varphi^+}$に負閉路は存在しないことを示せば良い．
+
+    $G_{\varphi^+}$に負閉路$C$が存在したと仮定．更新前の$G_\varphi$には負閉路$C$はなかったので，$C$の逆向き枝が更新時の最短路$P$に含まれていたことになる（下図）．
+
+    \begin{center}
+        $G_\varphi$
+        \begin{tikzpicture}
+            \draw[blue, thick, ->] decorate [decoration={coil, aspect=0}] {(0, 0) node {} to (6, 0) node[above] {$P$}};
+            \draw[AlertOrange, thick, ->] (4, 0 ) -> (3, 0); 
+            \draw[AlertOrange, thick, ->] (3, 0 ) -> (3, -1);
+            \draw[AlertOrange, thick, ->] (3, -1) ->(4, -1) node[midway, above] {$C$};
+            \draw[AlertOrange, thick, ->] (4, -1) -> (4, 0);
+        \end{tikzpicture}
+    \end{center}
+    
+    すると，迂回路$P'$で$P$より長さが短いものが存在し，矛盾． \qed
+
+    \vfill
+    \footnotesize
+    \structure{(注)}
+    次に紹介する主双対法の証明では，$(G_\varphi, \ell_\varphi)$にポテンシャルの存在が示される．「$\not\exists$負閉路 $\iff$ $\exists$ポテンシャル」より，ここで証明したことの別証明を与えている．
 \end{frame}
 
 \begin{frame}[t]{逐次最短路法の証明}
@@ -661,14 +784,32 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
 
     \structure{(証明)} 
     $X \subseteq V$を$G_\varphi$において$U^+$から到達可能な頂点全体とする．定義から$U^+ \subseteq X \subseteq V \setminus U^-$.
-    このとき，
+
+    \bigskip
+    $G_\varphi$において$X$から出る枝は存在しないことから，以下が成り立つ:
+    \begin{itemize}
+        \item $G$において$X$から出る枝$a \in \Out(X)$に対し，$\varphi(a) = u(a)$
+        \item $G$において$X$に入る枝$a \in \In(X)$に対し，$\varphi(a) = 0$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{逐次最短路法の証明}
+    \small
+    また，$U^+, U^-$の定義から，以下が成り立つ: 
+    \begin{itemize}
+        \item $\partial\varphi(i) < b(i)$ \quad ($i \in U^+$) 
+        \item $\partial\varphi(i) \leq b(i)$ \quad ($i \in V \setminus U^-$)
+    \end{itemize}
+
+    \pause
+    よって
     \begin{align*}
         b(X) 
         &= b(U^+) + b(X \setminus U^+) \\
-        &> (\partial\varphi)(U^+) + (\partial\varphi)(X \setminus U^+) \\
+        &> (\partial\varphi)(U^+) + (\partial\varphi)(X \setminus U^+) \tag{上の不等式} \\
         &= (\partial\varphi)(X) \\
         &= \varphi(\Out_G(X)) - \varphi(\In_G(X)) \\
-        &= u(\Out_G(X)) - 0
+        &= u(\Out_G(X)) - 0 \tag{$X$から出る枝がないことから}
     \end{align*}
     となり，Galeの定理より$b$流は存在しない．\qed
 \end{frame}
@@ -690,6 +831,8 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
     \end{theorem}
     \hfill \alert{擬多項式時間}
 \end{frame}
+
+\againframe<3>{algs}
 
 \begin{frame}{主双対法}
     \small
@@ -742,27 +885,36 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
     次の補題を示せば，あとは逐次最短路法の定理から従う．
     
     \begin{lemma}
-    主双対法における$p$は，常に$(D_\varphi, \ell_\varphi)$上のポテンシャル．
+    主双対法における$p$は，常に$(G_\varphi, \ell_\varphi)$上のポテンシャル．
     \end{lemma}
     \pause
     \structure{(証明)} 
+    % $p^+$は$(G_\varphi, \ell_\varphi)$のポテンシャルである．
     $p^+ := p + d$とする．{\footnotesize ($d: V \to \R$ ... $(G_\varphi, \ell_{\varphi,p})$上の（$U^+$からの）最短路長関数)}
 
     \bigskip
+    \structure{Claim.} $p^+$は$(G_\varphi, \ell_\varphi)$のポテンシャル．
+
+    {\footnotesize 
+    \structure{(∵)}
     $d$は$(G_\varphi, \ell_{\varphi,p})$のポテンシャルなので，任意の枝$a = ij \in A_\varphi$に対し，
     \begin{align*}
         d(j) - d(i) \leq \ell_{\varphi,p}(a) = \ell_\varphi(a) + p(i) - p(j)
     \end{align*}
-    が成り立つ．移項すると $p^+(j) - p^+(i) \leq \ell_\varphi(a)$ となり，$p^+$は$(D_\varphi, \ell_\varphi)$のポテンシャルである．
+    が成り立つ．移項すると $p^+(j) - p^+(i) \leq \ell_\varphi(a)$. \qed
+    }
 
     \pause
     \bigskip
-    次に，$P$に沿って$\varphi$を更新した後も$p^+$がポテンシャルであることを示す．
+    \structure{Claim.} 更新後の流$\varphi^+$に対し，$p^+$は$(G_{\varphi^+}, \ell_{\varphi^+})$のポテンシャル．
+
+    {\footnotesize 
+    \structure{(∵)}
     最短路$P$上の枝$a = ij$では，上の不等式で等号が成立:
     \begin{align*}
         d(j) - d(i) = \ell_{\varphi,p}(a) \quad \iff \quad p^+(j) - p^+(i) = \ell_\varphi(a)
     \end{align*}
-    よって，更新後に生じる$P$の反転枝に関しても，ポテンシャル条件が成立． \qed
+    よって，$\varphi$の更新により$P$上に逆向き枝が生じても，$p^+$がポテンシャルであることは保たれる． \qed }
 \end{frame}
 
 \begin{frame}{主双対法の計算量}
@@ -784,6 +936,8 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
     \hfill \alert{擬多項式時間}
 \end{frame}
 
+\againframe<4>{algs}
+
 \begin{frame}{容量スケーリング法}
     \small
     逐次最短路法・主双対法の反復回数を$O(B)$→$O(n \log b_{\max})$に改善したもの． \\
@@ -801,13 +955,14 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
         \item $\Delta \in \Z_{++}$: スケーリングパラメータ
         \item 流$\varphi$に対し，
         \begin{align*}
-            U^+_\Delta &:= \{i \in U^+ : b(i) \geq (\partial\varphi)(i) + \Delta \} \subseteq U^+ \\
-            U^-_\Delta &:= \{i \in U^- : b(i) \leq (\partial\varphi)(i) - \Delta \} \subseteq U^-
+            U^+_\Delta &:= \{i \in U^+ : b(i) \geq (\partial\varphi)(i) \highlight{$+ \Delta$} \} \subseteq U^+ \\
+            U^-_\Delta &:= \{i \in U^- : b(i) \leq (\partial\varphi)(i) \highlight{$- \Delta$} \} \subseteq U^-
         \end{align*}
-        \dotfill $\Delta$以上供給が余っている/需要が満たされていない頂点
+        \dotfill \alert{$\Delta$以上}供給が余っている/需要が満たされていない頂点
     \end{itemize}
-    整数性より$\Delta = 1$のときは，$(U^+_\Delta, U^-_\Delta) = (U^+, U^-)$.
+    $\varphi$が整数流の場合: $\Delta = 1 \implies (U^+_\Delta, U^-_\Delta) = (U^+, U^-)$.
 \end{frame}
+
 
 \begin{frame}{容量スケーリング法}
     \small
@@ -838,18 +993,16 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
     $\Delta$が一定の間を\alert{$\Delta$フェーズ}と呼ぶ．
 
     \bigskip
+    \structure{観察}
     \begin{itemize}
         \setlength{\itemsep}{1em}
 
-        \item $\Delta$フェーズにおける$\varphi(a)$は$\Delta$の倍数． \\
+        \item $\Delta$フェーズにおける流$\varphi(a)$は$\Delta$の倍数． \\
         {\footnotesize \structure{(∵)} 初期流は$\varphi \equiv 0$より自明．$\Delta$フェーズにおける更新では，毎回$\Delta$だけ増減するのでOK．最後に，$\Delta \rightarrow \Delta/2$フェーズに移行したときも，$\varphi$が$\Delta$の倍数なので，自明に$\Delta/2$の倍数でもあるのでOK．}
 
-        \item $\varphi$は容量制約$0 \leq \varphi \leq u$を満たす． \\
+        \item 流$\varphi$は容量制約$0 \leq \varphi \leq u$を満たす． \\
         {\footnotesize \structure{(∵)} $u \equiv +\infty$より上限は自明．$\varphi(a) > 0$のとき，$\varphi(a)$は$\Delta$の倍数なので，更新で$\Delta$だけ減らしても負にはならない．}
     \end{itemize}
-    
-
-
 \end{frame}
 
 \begin{frame}[t]{容量スケーリング法の解析}
@@ -858,16 +1011,42 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
         各$\Delta$フェーズにおける更新は高々$n$回．
     \end{lemma}
 
-    \structure{(証明)} $\varphi$を$\Delta$フェーズの開始時の流とする．
-    $X$を$G_\varphi$において$U^+_{2\Delta}$から到達可能な頂点全体とすると，$U^+_{2\Delta} \subseteq X \subseteq V \setminus U^-_{2\Delta}$. また，$u \equiv +\infty$より，$G$に$X$から出る枝は存在しない．
+    \begin{columns}
+    \begin{column}{.7\textwidth}
+    \structure{(証明)} 
+    $\varphi$: $\Delta$フェーズの開始時の流 \\
+    $X$: $G_\varphi$において$U^+_{2\Delta}$から到達可能な頂点全体 \\
+    とする．このとき，
+    \begin{itemize}
+        \item $U^+_{2\Delta} \subseteq X \subseteq V \setminus U^-_{2\Delta}$. 
+        \item $u \equiv +\infty$より，$G$に$X$から出る枝は存在しない．
+    \end{itemize}
+    \end{column}
+    \begin{column}{.3\textwidth}
+        \begin{tikzpicture}
+            \draw[rounded corners, gray, fill=gray!20] (0, 0) rectangle ++(1, 2) node[above left] {$U^+_\Delta$};
+            \draw[rounded corners, gray, fill=gray!40, very thick] (0, 0) rectangle ++(1, 1) node[midway] {$U^+_{2\Delta}$};
+            \draw[rounded corners, gray, fill=gray!20] (3, 1) node[below right] {$U^-_{\Delta}$} rectangle ++(1, 2) ;
+            \draw[rounded corners, gray, fill=gray!40, very thick] (3, 2) rectangle ++(1, 1) node[midway] {$U^-_{2\Delta}$};
+            \draw[mysubset=AlertOrange, very thick, opacity=0.5] (0, 0) rectangle ++(4, 1.5) ++(0,-1.5) node[right, opacity=1.0] {$X$};
 
-    \pause
+            \onslide<2->{
+            \draw[blue, ->, thick] (0.5, 0.5) node[point, fill=blue, "{$s_\ell$}" left]{} 
+            to[bend left, "{$P$}" above] 
+            (3.5, 1.7) node[point, "{$t_\ell$}" right]{};
+            }
+        \end{tikzpicture}
+    \end{column}
+    \end{columns}
+
+    \onslide<2->
     \bigskip
     $(s_1, t_1), \dots, (s_k, t_k)$: $\Delta$フェーズ中の更新で使われた$P$の始点・終点（重複を許す）
     
     \bigskip
     \structure{Claim} $\abs{\{\ell : s_\ell \in X, t_\ell \notin X\}} \leq \abs{\{ \ell : s_\ell \notin X, t_\ell \in X\}}$ \\
-    \pause
+    
+    \onslide<3->
     {\footnotesize 
     \structure{(∵)} $G$に$X$の外に出る枝はないので，$X$から出るパスを使うには，それより前に$X$へ入るパスを使い，$G_\varphi$に$X$から出る枝を逆向き枝として作る必要がある． \qed}
 \end{frame}
@@ -876,10 +1055,13 @@ $P$を$U^+$--$U^-$最短路とし，$\varphi^+$を更新後の$b''$流とする�
     \small
     \structure{Claim} $\abs{\{\ell : s_\ell \in X, t_\ell \notin X\}} \leq \abs{\{ \ell : s_\ell \notin X, t_\ell \in X\}}$ 
 
-    \bigskip
+    \smallskip
     よって，
     \begin{align*}
         k
+        &= \abs{\{\ell : s_\ell, t_\ell \in X\}} \\ 
+        &\quad + \abs{\{\ell : s_\ell \in X, t_\ell \notin X\}} + \abs{\{\ell : s_\ell \notin X, t_\ell \in X\}} \\
+        &\qquad + \abs{\{\ell : s_\ell, t_\ell \notin X\}} \\
         &\leq \abs{\{\ell : s_\ell, t_\ell \in X\}} + 2\abs{\{\ell : s_\ell \notin X, t_\ell \in X\}} + \abs{\{\ell : s_\ell, t_\ell \notin X\}} \\
         &= \abs{\{\ell: t_\ell \in X\}} + \abs{\{\ell: s_\ell \notin X\}} \\
         &\leq \abs{X \cap U^-_\Delta} + \abs{U^+_{\Delta} \setminus X} \\
