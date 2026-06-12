@@ -5,7 +5,7 @@
 \title{組合せ最適化特論}
 \subtitle{第7回（マトロイド）}
 \author{担当: \textbf{相馬 輔}}
-\date{2026/1/22}
+\date{2026/7/2}
 
 \begin{document}
 \maketitle
@@ -86,7 +86,7 @@
 \newcommand{\indepaxiominner}{%
         \item[(I0)] $\emptyset \in \caI$
         \item[(I1)] $I \in \caI$, $I' \subseteq I$ $\implies$ $I' \in \caI$
-        \item[(I2)] $I_1, I_2 \in \caI$, $\abs{I_1} < \abs{I_2}$ $\implies$ $\exists e \in I_2 - I_1$~s.t.~$I_1 + e \in \caI$
+        \item[(I2)] $I_1, I_2 \in \caI$, $\abs{I_1} < \abs{I_2}$ $\implies$ $\exists e \in I_2 \setminus I_1$~s.t.~$I_1 + e \in \caI$
 }
 \newcommand{\indepaxiom}{%
     \begin{description}
@@ -213,18 +213,19 @@
 \begin{frame}{補題の証明}
     \indepaxiompostit 
 
-    \structure{(証明)} 
+    \begin{proof}
     \textbf{(I0), (I1):} 定義から自明． 
 
     \bigskip
-    \textbf{(I2):} 独立集合$I_1$, $I_2$ ($\abs{I_1} < \abs{I_2}$)を取る．
+    \textbf{(I2):} $I_1, I_2 \in \caI$ ($\abs{I_1} < \abs{I_2}$)を取る．
     
     \bigskip
     \structure{Claim.} $A[I_2]$の列のうち，$A[I_1]$の列が張る部分空間に含まれないものが存在する．\\
-    {\small \structure{(∵)} $A[I_1]$, $A[I_2]$の列の張る部分空間をそれぞれ$W_1, W_2$とすると，$\dim W_1 = \abs{I_1} < \abs{I_2} = \dim W_2$であるから．}
+    {\small \structure{(∵)} $A[I_1]$, $A[I_2]$の列の張る部分空間をそれぞれ$W_1, W_2$とすると，$\dim W_1 = \abs{I_1} < \abs{I_2} = \dim W_2$であるから．\qed}
     
     \bigskip
-    そのような列の添字を$e \in I_2 - I_1$とすると，$I_1 + e$は独立集合．\qed
+    そのような列の添字を$e \in I_2 \setminus I_1$とすると，$I_1 + e \in \caI$.
+    \end{proof}
 \end{frame}
 
 \begin{frame}{分割マトロイド$\subset$線形マトロイド}
@@ -242,7 +243,7 @@
         0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
         \end{bNiceArray}
     \end{align*}
-    を考えると，$A$が定める線形マトロイドの独立集合族は分割マトロイドの独立集合族に一致する．
+    を考えると，$A$が定める集合族$\caI$は分割マトロイドの集合族$\caI$に一致する．
     \end{column}
     \begin{column}{.2\textwidth}
     \begin{tikzpicture}[yscale=.8]
@@ -362,9 +363,10 @@
     \end{lemma}
     \pause
     {\small 
-    \structure{(証明)}
+    \begin{proof}
     背理法．$\abs{B_1} < \abs{B_2}$とする．
-    $B_1, B_2$は独立集合なので，公理(I2)より，ある$e \in B_2 - B_1$で$B_1 + e \in \caI$となるものが存在．これは$B_1$の極大性に反する． \qed
+    $B_1, B_2$は独立集合なので，公理(I2)より，ある$e \in B_2 \setminus B_1$で$B_1 + e \in \caI$となるものが存在．これは$B_1$の極大性に反する．
+    \end{proof}
     }
 
     \pause
@@ -382,8 +384,8 @@
         マトロイドの基族$\caB$に対し，次が成り立つ:
     \begin{description}
         \item[(B1)] $\caB \neq \emptyset$
-        \item[(B2)] $B_1, B_2 \in \caB$, $B_1 \neq B_2$, $i \in B_1 - B_2$ \\ 
-        $\implies \exists j \in B_2 - B_1$~s.t.~$B_1 - i + j \in \caB$.
+        \item[(B2)] $B_1, B_2 \in \caB$, $B_1 \neq B_2$, $i \in B_1 \setminus B_2$ \\ 
+        $\implies \exists j \in B_2 \setminus B_1$~s.t.~$B_1 - i + j \in \caB$.
     \end{description}
     \end{theorem}
     \end{column}
@@ -406,11 +408,12 @@
     \vfill
     \small
     \pause
-    \structure{(証明)} \\
+    \begin{proof} \\
     \textbf{(B1):} 公理(I0) $\emptyset \in \caI$より，少なくとも1つは基が存在する．
 
     \smallskip
-    \textbf{(B2):} $B_1 - i$と$B_2$は独立集合で，$\abs{B_1 - i} = \abs{B_1} - 1 < \abs{B_2}$．よって，公理(I2)より，ある$j \in B_2 - (B_1 - i) = B_2 - B_1$で$(B_1 - i) + j \in \caI$となるものが存在．$\abs{B_1 - i + j} = \abs{B_1}$なので，補題よりこれは基．\qed
+    \textbf{(B2):} $B_1 - i$と$B_2$は独立集合で，$\abs{B_1 - i} = \abs{B_1} - 1 < \abs{B_2}$．よって，公理(I2)より，ある$j \in B_2 \setminus (B_1 - i) = B_2 \setminus B_1$で$(B_1 - i) + j \in \caI$となるものが存在．$\abs{B_1 - i + j} = \abs{B_1}$なので，補題よりこれは基．
+    \end{proof}
 \end{frame}
 
 \begin{frame}{基族}
@@ -448,9 +451,8 @@
         \item 分割マトロイド: $r(X) = \abs{\{i: E_i \cap X \neq \emptyset\}}$
         \item グラフ的マトロイド: $r(X) = \abs{V(G[X])} - \text{($G[X]$の連結成分数)}$ \\ 
               {\footnotesize \hfill ($G[X]$: $X$の誘導部分グラフ)}
-        \item 線形マトロイド: $r(X) = \dim\mathrm{span}\{\text{$A[X]$の列ベクトル}\}$
+        \item 線形マトロイド: $r(X) = \rank A[X]$
     \end{itemize}
-
 \end{frame}
 
 \begin{frame}{階数関数の性質}
@@ -490,7 +492,8 @@
     \end{minipage}}
 
     \small
-    \structure{(証明)} \textbf{(R1), (R2):} 定義から自明．  
+    \begin{proof}
+    \textbf{(R1), (R2):} 定義から自明．  
 
     \begin{columns}[T]
     \begin{column}{.8\textwidth}
@@ -527,8 +530,9 @@
         &\geq |I_{X \cup Y} \cap X| + |I_{X \cup Y} \cap Y| \\
         &= |I_{X \cup Y} \cap (X \cup Y) | + |I_{X \cup Y} \cap (X \cap Y)| \\
         &= |I_{X \cup Y}| + |I_{X \cap Y}| \\
-        &= r(X \cup Y) + r(X \cap Y) \qed
+        &= r(X \cup Y) + r(X \cap Y) 
     \end{align*}
+    \end{proof}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -538,7 +542,7 @@
 \begin{frame}{最小重み独立集合問題}
     \begin{itemize}
         \item $E$上のマトロイド$\bM = (E, \caI)$ %\quad ($\caB$: $\bM$の基族) 
-        \item 台集合上の重み$w(e) \in \R$ ($e \in E$) 
+        \item 台集合上の重み$w: E \to \R$
         \item 非負整数$0 \leq k \leq r(\bM)$
     \end{itemize}
     
@@ -556,9 +560,11 @@
 \begin{frame}{例：最小重み全域木問題}
 
     \begin{columns}[T]
-        \begin{column}{.7\textwidth}
-    $G = (V, E)$: 連結無向グラフ, \\ 
-    $w(e) \in \R$ ($e \in E$): 枝重み
+        \begin{column}{.8\textwidth}
+            \begin{itemize}
+                \item $G = (V, E)$ 連結無向グラフ
+                \item $w: E \to \R$ 枝重み
+            \end{itemize}
     \begin{block}{最小重み全域木問題 (Minimum Weight Spanning Tree Problem)}
         \[
            \text{minimize} \quad w(T) \quad\text{s.t.}\quad \text{$T$は$G$の全域木} 
@@ -588,23 +594,21 @@
 \end{frame}
 
 \begin{frame}<1,8>[label=MST]
-    \frametitle{}
+    \frametitle{例}
 
     \begin{center}
         \tikz[scale=2]{
-            \begin{scope}[every node/.style={inner sep=0pt}]
-            \node(a) at (0, 0) {\coloremojicode[scale=2.5]{computer}};
-            \node(b) at (1, 1) {\coloremojicode[scale=2.5]{computer}};
-            \node(c) at (3, 1) {\coloremojicode[scale=2.5]{computer}};
-            \node(d) at (5, 1) {\coloremojicode[scale=2.5]{computer}};
-            \node(e) at (6, 0) {\coloremojicode[scale=2.5]{computer}};
-            \node(f) at (5,-1) {\coloremojicode[scale=2.5]{computer}};
-            \node(g) at (3,-1) {\coloremojicode[scale=2.5]{computer}};
-            \node(h) at (1,-1) {\coloremojicode[scale=2.5]{computer}};
-            \node(i) at (2, 0) {\coloremojicode[scale=2.5]{computer}};
-            % fire
-            \node<9-> at (c) {\coloremojicode[scale=2.5]{fire}};
-            \end{scope}
+            \graph[mygraph, no placement]{
+            a[at={(0, 0)}];
+            b[at={(1, 1)}];
+            c[at={(3, 1)}];
+            d[at={(5, 1)}];
+            e[at={(6, 0)}];
+            f[at={(5,-1)}];
+            g[at={(3,-1)}];
+            h[at={(1,-1)}];
+            i[at={(2, 0)}];
+            };
             \foreach \i/\j/\w/\pos in {a/b/4/above, b/c/8/above, c/d/7/above, d/e/9/above, e/f/10/below, f/g/2/below, g/h/1/below, h/a/8/below, b/h/11/left, h/i/7/above, i/c/2/below, i/g/6/below, c/f/4/below, d/f/14/right}{
                   \draw[myedges] (\i) edge ["{$\w$}" \pos] (\j);
             }
@@ -631,14 +635,14 @@
         \STATE $E$の要素を$w$の昇順に並べる: $w(e_1) \leq \dots \leq w(e_n)$ ($n = \abs{E}$).
         \FOR{$i = 1, \dots, n$}
             \STATE $X_k + e_i \in \caI$ならば$e_i$を$X_k$に追加し，$k \gets k + 1$とする． \\
-            {\color{gray} \dotfill $X_k$は大きさ$k$の独立集合}
+            \COMMENT{$X_k$は大きさ$k$の独立集合}
         \ENDFOR
     \end{algorithmic}
     \end{block}
 
     \vfill
     \begin{theorem}
-        $k = 0, 1, \dots, r(\bM)$に対し，$X_k$が存在し，$X_k$は大きさ$k$の独立集合のうち最小重みである．
+        $k = 0, 1, \dots, r(\bM)$に対し，$X_k$が存在し，かつ$X_k$は大きさ$k$の独立集合のうち重み最小である．
     \end{theorem}
 \end{frame}
 
@@ -667,14 +671,15 @@
 \begin{frame}{定理の証明}
     \small
     \begin{lemma}
-        貪欲法の任意の時点を考え，そのときの暫定解$X$とする．
-        このとき，\\ $e \notin X$, $X + e \in \caI \implies$ $e$はまだ調べていない要素．
+        貪欲法の任意の時点の暫定解$X$に対して，次が成り立つ:\\
+        $e \notin X$, $X + e \in \caI \implies$ $e$はまだ調べていない要素．
     \end{lemma}
     \pause
-    \structure{(証明)} 
+    \begin{proof}
     $e$は既に調べた要素だと仮定する．
     $e$を調べたときの暫定解を$X' \subseteq X$とすると，$X' + e \subseteq X + e \in \caI$より，$X' + e \in \caI$.
-    よって，貪欲法は$e$を$X'$に追加したことになり，$e \in X$となって矛盾．\qed
+    よって，貪欲法は$e$を$X'$に追加したことになり，$e \in X$となって矛盾．
+    \end{proof}
 
     \vfill
     \pause
@@ -682,13 +687,15 @@
         $k = 0, 1, \dots, r(\bM)$に対し，$X_k$が存在する．
     \end{lemma}
     \pause
-    \structure{(証明)} $k < r(\bM)$とし，$X_k$が存在すると仮定する．
+    \begin{proof}
+    $k < r(\bM)$とし，$X_k$が存在すると仮定する．
     % $B$を$X_k$を含む基とする．
     $k = \abs{X_k} < r(\bM)$より，$X_k$は基ではないから，$e \notin X_k$で$X_k + e \in \caI$となるものが存在．
 
     \pause
     前補題より，$e$は$X_k$が定義された時点で，まだ調べていない要素である．
-    よって，少なくとも1つは$X_k$に追加できる要素がまだ残っているので，$X_{k+1}$が定義される． \qed
+    よって，少なくとも1つは$X_k$に追加できる要素がまだ残っているので，$X_{k+1}$が定義される． 
+    \end{proof}
 \end{frame}
 
 \begin{frame}{定理の証明}
@@ -741,7 +748,7 @@
 
     \newcommand{\Xmi}{\textcolor{UniBlue}{X_{i-1}}}
     \newcommand{\Yi}{\textcolor{AlertOrange}{Y_i}}
-    独立集合$\Xmi$と$\Yi$に公理(I2)を適用すると，ある$y \in \Yi - \Xmi$で$\Xmi + y \in \caI$となるものが存在する．
+    独立集合$\Xmi$と$\Yi$に公理(I2)を適用すると，ある$y \in \Yi \setminus \Xmi$で$\Xmi + y \in \caI$となるものが存在する．
     
     \bigskip
     補題より，$y$は$x_i$を調べる時点（暫定解$X_{i-1}$）でまだ調べられていないので，$w(y) \geq w(x_i)$が成立．一方，$w(y) \leq w(y_i) \textcolor{AlertOrange}{{}<{}} w(x_i)$なので，矛盾．\qed
@@ -883,8 +890,8 @@
     \begin{primal}
         \setlength{\abovedisplayskip}{0pt}
         \begin{alignat*}{3}
-            \text{max}   \quad & \sum_{e \in E} w(e)x(e) && \quad \\
-            \text{s.t.}  \quad & \sum_{e \in X} x(e)  \leq r(X) && \quad (X \subseteq E) \\
+            \text{max}   \quad & w^\top x && \quad \\
+            \text{s.t.}  \quad & x(X)  \leq r(X) && \quad (X \subseteq E) \\
                          \quad & x(e) \geq 0 && \quad (e \in E)
         \end{alignat*}
     \end{primal}
@@ -892,7 +899,7 @@
         \setlength{\abovedisplayskip}{0pt}
         \begin{alignat*}{3}
             \text{min}  \quad & \sum_{X \subseteq E} r(X) y_X && \\
-            \text{s.t.} \quad & \sum_{X \in e} y_X \geq w(e)  &&\quad && (e \in E) \\
+            \text{s.t.} \quad & \sum_{X \ni e} y_X \geq w(e)  &&\quad && (e \in E) \\
                          \quad & y_X  \geq 0                  &&\quad && (X \subseteq E)
         \end{alignat*}
     \end{dual}
