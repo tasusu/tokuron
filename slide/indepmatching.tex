@@ -5,7 +5,7 @@
 \title{組合せ最適化特論}
 \subtitle{第8回（独立マッチング・マトロイド交差）}
 \author{担当: \textbf{相馬 輔}}
-\date{2026/1/29}
+\date{2026/7/8}
 
 \begin{document}
 \maketitle
@@ -62,7 +62,7 @@
 \againframe<2|handout:0>{outline}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{独立マッチング}
+\begin{frame}[label=indepmatching]{独立マッチング}
     \begin{columns}[T]
     \begin{column}{.7\textwidth}
         $G=(V^+, V^-; E)$: 二部グラフ \\
@@ -171,14 +171,15 @@
         $r^+, r^-$をそれぞれ，マトロイド$\bM^+, \bM^-$の階数関数とする．\\
         任意の独立マッチング$M$と頂点被覆$(S^+,S^-)$に対し，$\abs{M} \leq r^+(S^+) + r^-(S^-)$.
     \end{lemma}
-    \structure{(証明)} 
+    \begin{proof}
     \[
-        \abs{M} \leq \abs{\partial^+ M \cap S^+} + \abs{\partial^- M \cap S^-}  \leq r^+(S^+) + r^-(S^-) \qed
+        \abs{M} \leq \abs{\partial^+ M \cap S^+} + \abs{\partial^- M \cap S^-}  \leq r^+(S^+) + r^-(S^-) 
     \]
+    \end{proof}
 \end{frame}
 
 \begin{frame}{独立マッチングの最大最小定理}
-    \structure{今日の目標:} 以下の定理をアルゴリズム的に証明し，主・双対最適解が多項式時間で求められることを示す．
+    \structure{今日の目標:} 以下の最大最小定理をアルゴリズム的に証明し，主・双対最適解が多項式時間で求められることを示す．
     \begin{theorem}[Welsh (1970)]
         \[
             \max_{\text{$M$:独立マッチング}} |M| = \min_{\text{$(S^+,S^-)$: 頂点被覆}} r^+(S^+) + r^-(S^-)
@@ -186,7 +187,7 @@
     \end{theorem}
 
     \vfill
-    これは，K\H{o}nig--Egerv\'aryの定理の一般化である．
+    これは，K\H{o}nig--Egerv\'aryの定理（第２回）の一般化である．
     \small
     \begin{theorem}[K\H{o}nig--Egerv\'ary]
         \[
@@ -199,7 +200,7 @@
     定理をマトロイド交差の場合に適用すると，以下の定理が得られる．
     \begin{theorem}[Edmonds (1970)]
         \[
-            \max_{I \in \caI_1 \cap \caI_2} |I| = \min_{X \subseteq E} r_1(X) + r_2(E - X)
+            \max_{I \in \caI_1 \cap \caI_2} |I| = \min_{X \subseteq E} r_1(X) + r_2(E \setminus X)
         \]
     \end{theorem}
 
@@ -208,13 +209,13 @@
     \small
     \begin{columns}[T]
     \begin{column}{.7\textwidth}
-        \structure{(証明)}
-        帰着に用いた二部グラフにおいて，任意の$X \subseteq E$に対して$(S^+, S^-) = (X, E - X)$は頂点被覆．
+        \begin{proof}
+        帰着に用いた二部グラフにおいて，任意の$X \subseteq E$に対して$(S^+, S^-) = (X, E \setminus X)$は頂点被覆．
 
         \smallskip
-        逆に，頂点被覆$(S^+, S^-)$に対し，$X = S^+$とすると，頂点被覆の定義から$E - X \subseteq S^-$．
-        階数関数の単調性より，$r^+(S^+) + r^-(S^-) \geq r_1(X) + r_2(E - X)$
-        なので，右辺の最小化においては$(X, E-X)$の形の頂点被覆だけ考えれば良い． \qed
+        逆に，任意の頂点被覆$(S^+, S^-)$に対し，$X = S^+$とすると，頂点被覆の定義から$E \setminus  X \subseteq S^-$．
+        階数関数の単調性より，$r_2(E \setminus X) \leq r^-(S^-)$なので，右辺の最小化においては$(X, E\setminus X)$の形の頂点被覆だけ考えれば十分． 
+        \end{proof}
     \end{column}
     \begin{column}{.3\textwidth}
         \centering
@@ -225,7 +226,7 @@
         };
         \begin{scope}[on background layer]
             \node[mysubset, fit=(1) (2), "$X$" left ]{} ;
-            \node[mysubset, fit=(6), "$E - X$" right]{} ;
+            \node[mysubset, fit=(6), "$E \setminus X$" right]{} ;
         \end{scope}
         }
     \end{column}
@@ -354,7 +355,7 @@
     \end{column}
     \end{columns}
     \begin{block}{}
-    大きさ$\abs{E}$の独立マッチング $\longleftrightarrow$ 独立集合への分割$E = (I_1, \dots, I_k)$ 
+    大きさ$\abs{E}$の独立マッチング $\longleftrightarrow$ 独立集合への分割$E = I_1 \cup \dots \cup I_k$ 
     \end{block}\qed
 \end{frame}
 
@@ -362,9 +363,10 @@
 \begin{frame}{応用例②: 最小重み全域有向木}
     \small
     \begin{columns}
-    \begin{column}{.6\textwidth}
+    \begin{column}{.69\textwidth}
     \begin{definition}
-        有向グラフ$D = (V, A)$の部分グラフ$T$が，$r \in V$を根とする\alert{全域有向木 (spanning arborescence)}$\defiff$
+        有向グラフ$D = (V, A)$の部分グラフ$T$が，$r \in V$を根とする\alert{全域有向木 (spanning arborescence)}\\ 
+        $\defiff$
         \begin{itemize}
             \item 枝の向きを無視すると$T$は全域木
             \item 任意の頂点$v \in V - r$に対し，$\rho_T(v) = 1$ \\ 
@@ -372,7 +374,45 @@
         \end{itemize}
     \end{definition}
     \end{column}
-    \begin{column}{.4\textwidth}
+    \begin{column}{.3\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \graph[mygraph, grow right=2cm, branch down=2cm]{
+                r[as={$r$}] -> a -> b;
+                c -> d -> e;
+                r -> {c, d};
+                {a, b} -> e;
+                d -> {a, b, e};
+                {[edges={mypath}] 
+                r -> {a, c};
+                r -> d -> {b, e}; 
+                }
+            };
+        \end{tikzpicture}
+        \\
+        \footnotesize $r$を根とする全域有向木の例
+    \end{column}
+    \end{columns}
+
+    \begin{block}{最小重み全域有向木問題}
+        $w: A \to \R$: 枝重み
+        \[
+            \text{minimize} \quad w(T) \quad \text{subject to} \quad \text{$T$は$r$を根とする全域有向木}    
+        \]
+    \end{block}
+\end{frame}
+
+\begin{frame}{重み付きマトロイド交差への帰着}
+    \small
+    \begin{columns}[T]
+    \begin{column}{.7\textwidth}
+    枝集合$A$上のマトロイド$\bM_1, \bM_2$を次のように定める:
+    \begin{itemize}
+        \item $\bM_1 := $ $G$の向きを無視した無向グラフに対するグラフ的マトロイド
+        \item $\bM_2 := (\In(r), 2^{\In(r)}) \oplus (\text{分割$\{\In(v): v \in V - r\}$に対する分割マトロイド})$
+    \end{itemize}
+    \end{column}
+    \begin{column}{.3\textwidth}
         \centering
         \begin{tikzpicture}
             \graph[mygraph, grow right=2cm, branch down=2cm]{
@@ -390,21 +430,7 @@
     \end{column}
     \end{columns}
 
-    \begin{block}{最小重み全域有向木}
-        $w: A \to \R$: 枝重み
-        \[
-            \text{minimize} \quad w(T) \quad \text{subject to} \quad \text{$T$は$r$を根とする全域有向木}    
-        \]
-    \end{block}
-\end{frame}
-
-\begin{frame}{重み付きマトロイド交差への帰着}
-    枝集合$A$上のマトロイド$\bM_1, \bM_2$を次のように定める:
-    \begin{itemize}
-        \item $\bM_1 := $ $G$の向きを無視した無向グラフに対するグラフ的マトロイド
-        \item $\bM_2 := (\In(r), 2^{\In(r)}) \oplus (\text{分割$\{\In(v): v \in V - r\}$に対する分割マトロイド})$
-    \end{itemize}
-
+    \vfill
     \begin{block}{}
         \centering
         $T \subseteq A$が全域有向木 $\iff$ $T \in \caI_1 \cap \caI_2$かつ$\abs{T} = \abs{V} - 1$
@@ -429,10 +455,16 @@
     \end{itemize}
 \end{definition}
     すなわち，サーキットは極小な従属集合．
-
+    \small
+    \pause
     \vfill
     \begin{columns}[T]
     \begin{column}{.7\textwidth}
+        \begin{itemize}
+            \item $X$が独立集合 $\iff$ $X$はサーキットを含まない．
+        \end{itemize}
+
+    \bigskip
     \structure{例} グラフ的マトロイドのサーキット$=$グラフの単純閉路
     \end{column}
     \begin{column}{.3\textwidth}
@@ -446,13 +478,18 @@
     \end{columns}
 \end{frame}
 
+\newcommand{\circuitaxiominner}{%
+        \item[(C1)] $C_1, C_2 \in \caC$, $C_1 \subseteq C_2 \implies C_1=C_2$
+        \item[(C2)] $C_1, C_2 \in \caC$ ($C_1 \neq C_2$), $e \in C_1 \cap C_2$ \\ $\implies (C_1 \cup C_2) - e$はサーキットを含む．}
+\newcommand{\circuitaxiom}{%
+\begin{description}
+    \circuitaxiominner
+\end{description}}
+
 \begin{frame}{サーキット}
 \begin{theorem}
     サーキット族$\caC$は以下の性質を満たす: 
-    \begin{description}
-        \item[(C1)] $C_1, C_2 \in \caC$, $C_1 \subseteq C_2 \implies C_1=C_2$
-        \item[(C2)] $C_1, C_2 \in \caC$ ($C_1 \neq C_2$), $e \in C_1 \cap C_2$ \\ $\implies (C_1 \cup C_2) - e$はサーキットを含む．
-    \end{description}
+    \circuitaxiom
 \end{theorem}
 {\hfill\footnotesize $(C_1 \cup C_2) - e := (C_1 \cup C_2) \setminus \{ e \}$}
     
@@ -479,31 +516,48 @@
     \end{center}
 \end{frame}
 
+\newcommand{\circuitaxiompostit}{%
+    \postit{\footnotesize
+    \begin{minipage}{0.56\textwidth}
+        \begin{description}
+        \setlength{\itemindent}{-40pt}
+        \setlength{\itemsep}{0pt}
+        \circuitaxiominner
+        \end{description}
+    \end{minipage}}
+}
+
 \begin{frame}{定理の証明}
-    \tikz[overlay, remember picture]{
-        \node[anchor=north east] at (current page.north east) {
-        \tikz{
-            \node[circle, fill=UniBlue, opacity=.3, minimum size=1.8cm] (B1) at (0,0) {};
-            \node[circle, fill=AlertOrange, opacity=.3, minimum size=2cm] (B2) at (1,0) {};
-            \node[point,fill=UniBlue,"$f$" above] (j) at ([xshift=-.4cm] B1.base) {};
-            \node[UniBlue, above=1pt of B1, xshift=-.4cm] {$C_1$};
-            \node[AlertOrange, above=1pt of B2, xshift=+.4cm] {$C_2$};
-        }
-            };
-    }
+    \circuitaxiompostit
     
     \textbf{(C1): } 極小性から明らか．
 
     \smallskip
+    \begin{columns}[T]
+    \begin{column}{.75\textwidth}
     \textbf{(C2): } 
-    $C_1 \neq C_2$と(C1)から要素$f \in C_1 - C_2$が存在する．
+    $C_1 \neq C_2$と(C1)から要素$f \in C_1 \setminus C_2$が存在する．
     極小性から$C_1 - f$は独立集合である．
-    $C_1 - f$に$C_2 - C_1$の要素を追加して$C_1 \cup C_2$に含まれる最大の独立集合$B$を作る．
+    $C_1 - f$に$C_2 \setminus C_1$の要素を追加して$C_1 \cup C_2$に含まれる最大の独立集合$B$を作る．
+
     $B$は独立集合なのでサーキット$C_2$を含むことはできないから，
+    \end{column}
+    \begin{column}{.25\textwidth}
+    \centering
+        \tikz{
+            \node[circle, fill=UniBlue, opacity=.3, minimum size=1.8cm] (B1) at (0,0) {};
+            \node[circle, fill=AlertOrange, opacity=.3, minimum size=2cm] (B2) at (1,0) {};
+            \node[point,fill=UniBlue,"$f$" above] (j) at ([xshift=-.4cm] B1.base) {};
+            \node[point,fill=AlertOrange,"$e$" above] (e) at ($(B1.base)!.5!(B2.base)$) {};
+            \node[UniBlue, above=1pt of B1, xshift=-.4cm] {$C_1$};
+            \node[AlertOrange, above=1pt of B2, xshift=+.4cm] {$C_2$};
+        }
+    \end{column}
+    \end{columns}
     \[
-        \abs{B} < \abs{C_1 - f} + \abs{C_2 - C_1} = \abs{C_1 \cup C_2} - 1 = \abs{(C_1 \cup C_2) - e}
+        \abs{B} < \abs{C_1 \cup C_2} - 1 = \abs{(C_1 \cup C_2) - e}.
     \]
-    $B$は$C_1 \cup C_2$に含まれる最大の独立集合であったから，$(C_1 \cup C_2)- e$は従属集合であり，サーキットを含む． \qed
+    $B$は$C_1 \cup C_2$に含まれる最大の独立集合であったから，それより大きい$(C_1 \cup C_2)- e$は従属集合であり，したがってサーキットを含む． \qed
 \end{frame}
 
 \tikzgraphsset{declare={excexample}{%
@@ -535,6 +589,8 @@
 \end{frame}
 
 \begin{frame}{補題の証明} 
+    \circuitaxiompostit
+
     \textbf{[存在性]}
     $I+y$は従属なので，サーキット$C$を含む．
     $I$は独立なので$C \subseteq I$ではあり得ないから，$y \in C$である．
@@ -547,14 +603,15 @@
 
 \begin{frame}{基本サーキットと交換可能性}
     \begin{lemma}
-        $I \in \caI$, $y \notin I$, $I + y \notin \caI$, $x \in I$とする．このとき，$x \in C(I, y) \iff I - x + y \in \caI$.
+        $I \in \caI$, $x \in I$, $y \notin I$, $I + y \notin \caI$とする．このとき，$x \in C(I, y) \iff I - x + y \in \caI$.
     \end{lemma}
     
     \begin{columns}
     \begin{column}{.6\textwidth}
-    \structure{(証明)}
+    \begin{proof}
     前補題より，$I + y$は唯一のサーキット$C(I, y)$を含む．
-    $x \in C(I, y)$より，$I - x + y$は$C(I, y)$を含まないから，独立集合である．逆も同様． \qed
+    $x \in C(I, y)$より，$I - x + y$は$C(I, y)$を含まないから，独立集合である．逆も同様． 
+    \end{proof}
     \end{column}
     \begin{column}{.4\textwidth}
         \centering
@@ -607,7 +664,7 @@
 \begin{frame}{逐次交換可能性}
     \small
     
-    \begin{lemma}
+    \begin{lemma}[逐次交換補題]
         $I \in \caI$, $x_1, \dots, x_s \in I$, $y_1, \dots, y_s \notin I$に対し，
         \begin{enumerate}
             \setlength{\itemsep}{0pt}
@@ -640,7 +697,8 @@
         \end{enumerate}
         \end{minipage}
     }
-    \structure{(証明)} $I_k := I \setminus \{x_1, \dots, x_k\} \cup \{y_1, \dots, y_k\}$ ($k=0, \dots, s$)とおく．$I_k \in \caI$を$k$に関する帰納法で示す．
+    \begin{proof}
+         $I_k := I \setminus \{x_1, \dots, x_k\} \cup \{y_1, \dots, y_k\}$ ($k=0, \dots, s$)とおく．$I_k \in \caI$を$k$に関する帰納法で示す．
     
     \bigskip
     $k=0$のときは$I_k = I$より自明．
@@ -648,13 +706,19 @@
     $k > 0$とし，$I_{k-1} \in \caI$とする．$I_{k-1} + y_k \in \caI$なら，$I_k = I_{k-1} + y_k - x_k \in \caI$よりOK．$I_{k-1} + y_k \notin \caI$の場合を考える．
 
     \bigskip
-    $C := C(I_{k-1}, y_k)$を基本サーキットとする．仮定より，$C(I, y_k) \subseteq I_{k-1} + y_k$だから，基本サーキットの一意性より$C = C(I, y_k)$．よって，$x_k \in C$なので，$I_{k-1} - x_k + y_k \in \caI$. \qed
+    $C := C(I_{k-1}, y_k)$を基本サーキットとする．$x_k \in C$を示せばよい．
+
+    仮定②より$x_1, \dots, x_{k-1} \notin C(I, y_k)$なので，$C(I, y_k) \subseteq I_{k-1} + y_k$. 
+    基本サーキットの一意性より$C = C(I, y_k) \underset{\text{①}}{\ni} x_k$.
+    \end{proof}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{アルゴリズム}
 \againframe<4|handout:0>{outline}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\againframe{indepmatching}
+
 \begin{frame}{補助ネットワーク}
 
     \small
@@ -667,9 +731,9 @@
         \begin{align*}
             \overrightarrow{E} &:= \{(i, j) : ij \in E\} \text{\color{gray}\dots\dots$E$の準向き枝}\\
             \color{AlertOrange} \overleftarrow{M} &:= \{(j, i) : ij \in M\} \text{\color{gray}\dots\dots$M$の逆向き枝}\\
-            \color{UniGreen} A^+ &:= \{(i, j) : i \in \partial^+ M, \partial^+ M + j \notin \caI^+, i \in C(\partial^+ M, j)\} \\
+            \color{UniGreen} A^+ &:= \{(x, y) : \partial^+ M + y \notin \caI^+, x \in C(\partial^+ M, y) - y\} \\
             & \quad \text{\color{gray}\dots\dots$\bM^+$の交換可能性を表す枝} \\
-            \color{UniGreen} A^- &:= \{(i, j) : j \in \partial^- M, \partial^- M + i \notin \caI^-, j \in C(\partial^- M, i)\} \\
+            \color{UniGreen} A^- &:= \{(y, x) : \partial^- M + y \notin \caI^-, x \in C(\partial^- M, y) - y\} \\
             & \quad \text{\color{gray}\dots\dots$\bM^-$の交換可能性を表す枝} \\
         \end{align*}
     \end{itemize}
@@ -704,8 +768,8 @@
     \begin{column}{.7\textwidth}
     補助ネットワーク$D_M$の頂点部分集合を次のように定める．
     \begin{itemize}
-        \item $U^+ := \{i \in V^+ - \partial^+ M : \partial^+ M + i \in \caI^+\}$
-        \item $U^- := \{j \in V^- - \partial^- M : \partial^- M + j \in \caI^-\}$
+        \item $U^+ := \{i \in V^+ \setminus \partial^+ M : \partial^+ M + i \in \caI^+\}$
+        \item $U^- := \{j \in V^- \setminus \partial^- M : \partial^- M + j \in \caI^-\}$
     \end{itemize}
     \textcolor{gray}{\dotfill$\partial^+ M, \partial^- M$に追加できる要素の集合}
 
@@ -715,6 +779,7 @@
     $D_M$上の$U^+$--$U^-$パス$P$に対し，$P$に沿って$M$の枝を反転させたマッチングを$M'$とする．
     {\footnotesize （ただし，$A^+$や$A^-$の枝は反転させない）}
 
+    \bigskip
     定義から，$\abs{M'} = \abs{M} + 1$.
     }
     \end{column}
@@ -748,8 +813,12 @@
 \begin{frame}{増加道アルゴリズム}
     \begin{theorem}
         \begin{itemize}
-            \item $P$が\alert{枝数最小の}$U^+$--$U^-$パスならば，$M'$は独立マッチング．
-            \item $U^+$--$U^-$パスが存在しないとき，$X$を$D_M$において$U^+$から到達可能な頂点集合とすると，$(V^+ - X, V^- \cap X)$は頂点被覆であり，強双対性$\abs{M} = r^+(V^+ - X) + r^-(V^- \cap X)$を満たす．したがって，$M$は最大独立マッチング．
+            \item $M$が独立マッチングで，$P$が\alert{枝数最小の}$U^+$--$U^-$パスならば，$M'$は独立マッチング．
+            \item $U^+$--$U^-$パスが存在しないとき，$X$を$D_M$において$U^+$から到達可能な頂点集合とすると，$(V^+ \setminus X, V^- \cap X)$は頂点被覆で，かつ強双対性
+        \[
+            \abs{M} = r^+(V^+ \setminus X) + r^-(V^- \cap X)
+        \]
+        を満たす．したがって，$M$は最大独立マッチングで，$(V^+ \setminus X, V^- \cap X)$は階数最小頂点被覆である．
         \end{itemize}
     \end{theorem}
 \end{frame}
@@ -762,12 +831,12 @@
         \begin{algorithmic}[1]
             \STATE $M \gets \emptyset$とする．
             \WHILE{$D_M$に$U^+$--$U^-$パスが存在する}
-                \STATE 枝数最小の$U^+$--$U^-$パス$P$を求める． \\
-                \textcolor{gray}{\dotfill 幅優先探索で発見可能}
+                \STATE 枝数最小の$U^+$--$U^-$パス$P$を求める． 
+                \COMMENT{幅優先探索で発見可能}
                 \STATE $P$に沿って枝を反転して，より大きな独立マッチング$M$を得る．
             \ENDWHILE
             \STATE $X$を$D_M$において$U^+$から到達可能な頂点集合とする．
-            \RETURN $M$, $(V^+ - X, V^- \cap X)$
+            \RETURN $M$, $(V^+ \setminus X, V^- \cap X)$
         \end{algorithmic} 
     \end{block}
 
@@ -780,21 +849,21 @@
     \begin{columns}
     \begin{column}{.7\textwidth}
     \textbf{[$M'$が独立マッチングであること]} \\
-    $x_0$: $P$の始点 \\
+    $i$: $P$の始点 \\
     $(x_1, y_1), \dots, (x_s, y_s)$: $P$上の$A^+$枝（この順で現れる）  \\
     \begin{block}{}
         \centering
-    $\partial^+ M' = (\partial^+ M + x_0) \setminus \{ x_1, \dots, x_s \} \cup \{ y_1, \dots, y_s \}$ \\
+    $\partial^+ M' = (\partial^+ M + i) \setminus \{ x_1, \dots, x_s \} \cup \{ y_1, \dots, y_s \}$ \\
     \end{block}
 
-    $I := \partial^+M + x_0$と$x_1, \dots, x_s$, $y_1, \dots, y_s$が逐次交換補題の条件を満たすことを確かめればよい． 
+    $I := \partial^+M + i$と$x_1, \dots, x_s$, $y_1, \dots, y_s$が逐次交換補題の条件を満たすことを確かめればよい． 
     \end{column}
     \begin{column}{.3\textwidth}
         \centering
         \footnotesize
         \begin{tikzpicture}
             \graph[mygraph, branch down=2.5em]{
-                x0["{$x_0$}" left];
+                x0["{$i$}" left];
                 x1["{$x_1$}" left];
                 y1["{$y_1$}" left];
                 x2["{$x_2$}" left];
@@ -831,16 +900,16 @@
 
 \begin{frame}{定理の証明 (2/2)}
     \small
-    \textbf{[$(V^+ - X, V^- \cap X)$が階数最小頂点被覆であること]} 
+    \textbf{[$(V^+ \setminus X, V^- \cap X)$が階数最小頂点被覆であること]} 
     \begin{columns}[T]
     \begin{column}{.7\textwidth}
 
-    $(S^+, S^-) := (V^+ - X, V^- \cap X)$とする．これが頂点被覆であることは二部マッチングのところで既にやった．
+    $(S^+, S^-) := (V^+ \setminus X, V^- \cap X)$とする．これが頂点被覆であることは二部マッチングのところで既にやった．
 
     \onslide<2->{
     \begin{itemize}
-        \item $X$から出る$A^+$の枝が存在しないことから，任意の$i \in S^+ - \partial^+ M$に対し，$C(\partial^+ M, i) \subseteq S^+$
-        \item 任意の$i \in S^+ - \partial^+ M$に対し，$\partial^+ M \cap S^+ + i$はサーキット$C(\partial^+ M, i)$を含むから，従属集合．
+        \item $X$から出る$A^+$の枝が存在しないことから，任意の$i \in S^+ \setminus \partial^+ M$に対し，$C(\partial^+ M, i) \subseteq S^+$
+        \item 任意の$i \in S^+ \setminus \partial^+ M$に対し，$\partial^+ M \cap S^+ + i$はサーキット$C(\partial^+ M, i)$を含むから，従属集合．
     \end{itemize}
     ∴ $\partial^+ M \cap S^+$は$S^+$の最大独立集合．
     同様に，$\partial^- M \cap S^-$は$S^-$の最大独立集合．
