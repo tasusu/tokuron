@@ -19,7 +19,7 @@
 \title{組合せ最適化特論}
 \subtitle{第10回（劣モジュラ最大化）}
 \author{担当: \textbf{相馬 輔}}
-\date{2026/2/26}
+\date{2026/7/16}
 \begin{document}
 \maketitle
 % \begin{frame}{目次}
@@ -66,41 +66,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \againframe<2>{outline}
 
-\begin{frame}{劣モジュラ関数}
-    \begin{block}{}
-        $f : 2^V \to \R$ が\alert{劣モジュラ関数} \\
-        $\iff$
-        $\forall X \subseteq \forall Y \subseteq V$, $\forall a \in V\setminus Y$,
-        \setlength{\abovedisplayskip}{0pt}
-        \[
-            \highlightcap[AlertOrange]{$f(X \cup a) - f(X)$}{\small 小さい集合の増分} \geq \highlightcap[blue]{$f(Y\cup a) - f(Y)$}{\small 大きい集合の増分}
-        \]
-        $\iff f(X) + f(Y) \geq f(X\cup Y) + f(X \cap Y)$ \hfill ($\forall X, Y \subseteq V$)
-    \end{block}
-
-    \vfill
-    % \begin{center}
-    %     \includegraphics[width=.5\linewidth]{figs/dimreturn2.png}
-    % \end{center}
-    \begin{center}
-    \huge
-    \begin{tikzpicture}
-        \node[inner sep=0pt] (e1) {\coloremoji{🍜}};
-        \node[below left=.1em of e1,inner sep=0pt] (e2) {\coloremoji{🍰}};
-        \node[below right=.1em of e1,inner sep=0pt] (e3) {\coloremoji{🍔}};
-        \node[right=3em of e3,inner sep=0pt,"\normalsize $a$" above] {\coloremoji{🍟}};
-        \begin{scope}[on background layer]
-            \node[draw,Blue,fill=blue!5,dotted,very thick,fit=(e1) (e2) (e3),"\normalsize $Y$" {blue,left}] {};
-            \node[draw,AlertOrange,fill=AlertOrange!20,dotted,very thick,fit=(e3),inner sep=3pt,"\normalsize $X$" {AlertOrange,above}] {};
-        \end{scope}
-    \end{tikzpicture}
-\end{center}
-\end{frame}
 
 
-\begin{frame}{単調劣モジュラ関数最大化 \\[-0.5em]\cite{Nemhauser1978}}
+\begin{frame}{単調劣モジュラ関数最大化~\cite{Nemhauser1978}}
     $f : 2^V \to \R_+$ ... 非負\alert{単調}劣モジュラ, {\footnotesize $f(\emptyset)=0$} \\
-    \hfill {\small [単調 $\iff$ $f(X) \leq f(Y)$ \quad ($X \subseteq Y$)]}
+    \hfill {\small [単調 $\defiff$ $f(X) \leq f(Y)$ \quad ($X \subseteq Y$)]}
 
    \vfill
    \begin{block}{}
@@ -434,12 +404,12 @@
 \againframe<3->{greedy}
 
 \begin{frame}{確率的貪欲法~\cite{Mirzasoleiman2015}}
-    $\epsilon >0$ を固定．
+    $\eps >0$ を固定．
     \begin{block}{}
     \begin{algorithmic}[1]
         \STATE $X_0 \gets \emptyset$
         \FOR{$i=1, \dots, k$}
-        \STATE $R_i:= V\setminus X_{i-1}$ から$\frac{n}{k}\log\frac{1}{\epsilon}$ 個ランダムサンプル
+        \STATE $R_i:= V\setminus X_{i-1}$ から$\frac{n}{k}\log\frac{1}{\eps}$ 個ランダムサンプル
         \STATE $a_i \in \argmax_{a \in R_i} f(X_{i-1}\cup a)$
         \STATE $X_{i} \gets X_{i-1} \cup a_i$
         \ENDFOR
@@ -451,9 +421,9 @@
     \begin{itemize}
         \item
         $
-            \E [ f(X)] \geq (1-1/e-\epsilon) f(X^*)
+            \E [ f(X)] \geq (1-1/e-\eps) f(X^*)
             $
-        \item $O(n\log(1/\epsilon))$回の関数値評価 \\
+        \item $O(n\log(1/\eps))$回の関数値評価 \\
         \alert{古典貪欲法の$O(nk)$に比べて改善！}
     \end{itemize}
 \end{frame}
@@ -596,13 +566,14 @@
     \begin{lemma}
         $f$:単調 $\implies \nabla F \geq \bfzero$
     \end{lemma}
-
+    \begin{proof}
         $i \in V$を任意に取る．$\nabla F(\bx)_i$を計算してみると
         \[
             \nabla F(\bx)_i = \sum_{X \subseteq V \setminus i} f(X \cup i)\Pr(X) - \sum_{X \subseteq V \setminus i} f(X)\Pr(X).
         \]
         ここで，$\Pr(X) = \prod_{k \in X}x_k \prod_{k \notin X: k \neq i} (1 - x_k)$である．
         $f$の単調性より$f(X \cup i) - f(X) \geq 0$なので，$\nabla F(\bx)_i \geq 0$.
+    \end{proof}
 \end{frame}
 
 \begin{frame}[t]{多重線型拡張の性質}
@@ -612,7 +583,7 @@
         特に$\varphi(t) = F(\bx + t \boldsymbol{d})$ ($\boldsymbol{d}\geq \zeros$) は凹関数，
         $\psi(t) = F(\bx + t(\be_i - \be_j))$は凸関数
     \end{lemma}
-
+    \begin{proof}
         $i = j$の場合は自明に$\frac{\partial^2 F}{\partial x_i \partial x_j} = 0$. $i\neq j$のとき，
         \[
             \frac{\partial^2 F}{\partial x_i \partial x_j}(\bx) =
@@ -621,6 +592,7 @@
         \]
         ここで，$\Pr(X) = \prod_{k \in X}x_k \prod_{k \notin X: k \neq i, j} (1 - x_k)$である．
         劣モジュラ性より$f(X \cup i \cup j) + f(X) - f(X \cup i) - f(X \cup j) \leq 0$なので$\frac{\partial^2 F}{\partial x_i \partial x_j}(\bx)\leq 0$.
+    \end{proof}
 \end{frame}
 
 \begin{frame}[t]{多重線型拡張の性質}
@@ -630,7 +602,7 @@
         特に$\varphi(t) = F(\bx + t \bv)$ ($\bv \geq \zeros$) は凹関数，
         $\psi(t) = F(\bx + t(\be_i - \be_j))$は凸関数
     \end{lemma}
-
+    \begin{proof}
     連鎖律より
     \[
         \varphi''(t) = \sum_{i, j \in V} \frac{\partial^2 F}{\partial x_i \partial x_j}(\bx+t\bv) v_iv_j
@@ -645,6 +617,7 @@
     \[
         \psi''(t) = -2\frac{\partial^2 F}{\partial x_i \partial x_j}(\bx+t(\be_i-\be_j)) \geq 0
     \]
+    \end{proof}
 \end{frame}
 
 \againframe<6|handout:0>{contgreedy}
@@ -696,7 +669,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{解析}
+\begin{frame}{定理の証明}
     \small
 $\Psi(t) := e^{t-1}F(\bx(t))$ とする.
 $\frac{d\Psi}{dt} = e^{t-1}[F(\bx(t)) + \nabla F(\bx(t))^\top \frac{d\bx(t)}{dt}]$.
@@ -749,7 +722,7 @@ $[0,1]$で積分: $\Psi(1)-\Psi(0) = F(\bx(1)) \geq (1-e^{-1})F(\bx^*)$.
 
     \begin{itemize}
         \item Frank-Wolfe法の亜種
-        \item 精度$\epsilon>0$に応じて 時間幅$\delta$を十分小さく取れば，同様の仮定のもと $F(\bx) \geq (1-1/e-\epsilon) \max_{\bx^* \in P}F(\bx^*)$
+        \item 精度$\eps>0$に応じて 時間幅$\delta$を十分小さく取れば，同様の仮定のもと $F(\bx) \geq (1-1/e-\eps) \max_{\bx^* \in P}F(\bx^*)$
     \end{itemize}
 \end{frame}
 

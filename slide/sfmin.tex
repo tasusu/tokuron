@@ -65,6 +65,7 @@
     \begin{block}{}
         $f : 2^V \to \R$ が\alert{劣モジュラ関数} \\
         $\defiff f(X) + f(Y) \geq f(X\cup Y) + f(X \cap Y)$ \hfill ($\forall X, Y \subseteq V$) \\
+        \pause
         $\iff$
         $\forall X \subseteq \forall Y \subseteq V$, $\forall a \in V\setminus Y$,
         \setlength{\abovedisplayskip}{0pt}
@@ -94,14 +95,14 @@
 \end{frame}
 
 \begin{frame}{劣モジュラ関数}
-    \begin{itemize}
+    \begin{itemize}[<+->]
         \setlength{\itemsep}{1em}
         \item $f_1, f_2$ 劣モジュラ関数, $\alpha_1, \alpha_2 \geq 0$ \\
          $\implies$ $\alpha_1 f_1 + \alpha_2 f_2$も劣モジュラ関数
 
         \item 特に，
     \[
-        f(X) + f(Y) = f(X \cup Y) + f(X \cap Y) 
+        f(X) + f(Y) = f(X \cup Y) + f(X \cap Y) \qquad (\forall X, Y \subseteq V)
     \]
     が成り立つ場合，$f$を\alert{モジュラ関数}という．\\
     {\footnotesize 例: $f(X) = |X|$や，重み$w: E \to \R$に対する$f(X) = w(X)$など．}
@@ -109,7 +110,7 @@
 
         \item $-f$が劣モジュラである関数を\alert{優モジュラ関数}という．すなわち，
     \[
-        f(X) + f(Y) \leq f(X \cup Y) + f(X \cap Y) 
+        f(X) + f(Y) \leq f(X \cup Y) + f(X \cap Y) \qquad (\forall X, Y \subseteq V)
     \]
         が成り立つ関数．
     \end{itemize}
@@ -160,7 +161,7 @@
 
 \begin{frame}{例2: 凹関数と線形関数の合成}
     \begin{columns}
-        \begin{column}{.55\linewidth}
+        \begin{column}{.5\linewidth}
             $V = \{1, \dots, n\}$ \\
     $\varphi : [0, +\infty) \to \R$ ... 凹関数 \\
     $w: V \to \R_+$ ... 非負重み
@@ -171,55 +172,126 @@
     \]
     \end{block}
         \end{column}
-        \begin{column}{.4\linewidth}
+        \begin{column}{.5\linewidth}
+            \small
             \pgfmathdeclarefunction{myfunc}{1}{%
                 \pgfmathparse{%
                 2.5*(1-exp(-####1))}%
             }
-            \begin{tikzpicture}[>=latex,scale=1.2]
-                \draw[->] (0,0) -- (4,0);
-                \draw[->] (0,0) -- (0,3);
-                \draw[domain=0:4,smooth,variable=\x,UniBlue,thick] plot ({\x},{myfunc(\x)});
-                \coordinate(a) at (0.5,{myfunc(0.5)});
-                \coordinate(b) at (1.5,{myfunc(1.5)});
-                \coordinate(c) at (2,{myfunc(2)});
-                \coordinate(d) at (3,{myfunc(3)});
+    \begin{tikzpicture}[>=latex,scale=1.2]
+        \draw[->] (0,0) -- (4,0);
+        \draw[->] (0,0) -- (0,3);
+        \draw[domain=0:4,smooth,variable=\x,thick,UniBlue] plot ({\x},{myfunc(\x)});
+        \coordinate(a) at (0.5,{myfunc(0.5)});
+        \coordinate(b) at (1.5,{myfunc(1.5)});
+        \coordinate(c) at (2,{myfunc(2)});
+        \coordinate(d) at (3,{myfunc(3)});
 
-                \foreach \x in {a,b,c,d}
-                    \draw[dotted,thick] (\x -| 0,0) -- (\x) -- (\x |- 0,0);
+        \foreach \x in {a,b,c,d}
+            \draw[dotted,thick] (\x -| 0,0) -- (\x) -- (\x |- 0,0);
 
-                \draw[UniBlue,->,thick] (a |- 0,0) -- (b |- 0,0);
-                \draw[UniBlue,->,thick] (c |- 0,0) -- (d |- 0,0);
-                \draw[AlertOrange,<->,thick] (a -| 0,0) -- (b -| 0,0);
-                \draw[AlertOrange,<->,thick] (c -| 0,0) -- (d -| 0,0);
-            \end{tikzpicture}
+        \draw[->,ultra thick] (a |- 0,0) node[below]{$w(X)$} -- node[midway,above]{$+w_a$} (b |- 0,0);
+        \draw[->,ultra thick] (c |- 0,0) node[below]{$w(Y)$} -- node[midway,above]{$+w_a$} (d |- 0,0);
+        \draw[->,ultra thick] (a -| 0,0) -- node[midway, left]{$f(a \mid X)$} (b -| 0,0);
+        \draw[->,ultra thick] (c -| 0,0) -- node[midway, left]{$f(a \mid Y)$} (d -| 0,0);
+        \node[above] at (4, {myfunc(4)}) {$\varphi$};
+    \end{tikzpicture}
         \end{column}
     \end{columns}
+    \begin{itemize}
+        \item $f(X) = \sqrt{w(X)}$ など
+    \end{itemize}
 \end{frame}
 
 
 \begin{frame}{例3: グラフのカット関数}
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    \structure{有向カット関数} \\
     $G = (V, A)$ ... 有向グラフ \\
-    $u: A \to \R_+$ ... 非負枝容量
+    $u: A \to \R_+$ ... 非負枝重み
     \begin{block}{}
         \[
             f(X) = u(\Out(X)) \quad (X \subseteq V) 
         \]
     \end{block}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+    \begin{tikzpicture}[scale=0.8]
+        \graph[no placement, mygraph]{
+            s[at={(0,0)}];
+            a[at={(2, 1)}];
+            b[at={(2,-1)}];
+            c[at={(4, 1)}];
+            d[at={(4,-1)}];
+            t[at={(6, 0)}];
+            s -> {a, b} -> {c, d} -> t;
+            a -> {b, d};
+            c -> d;
+            {[edges={mypath}]
+                a -> {c, d};
+                b -> d;
+            }
+        };
+        \node[AlertOrange, above] at ($(a)!.5!(c)$) {$\Out(X)$};
+        \begin{scope}[on background layer]
+        \node[mysubset, fit=(s) (a) (b),"{$X$}" {below, UniBlue}] {};
+        \end{scope}
+    \end{tikzpicture}
+    \end{column}
+    \end{columns}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    \structure{無向カット関数} \\
+    $G = (V, E)$ ... 無向グラフ \\
+    $u: E \to \R_+$ ... 非負枝重み
+    \begin{block}{}
+        \[
+            f(X) = u(E[X, \bar X]) \quad (X \subseteq V) 
+        \]
+    \end{block}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \centering
+    \begin{tikzpicture}[scale=0.8]
+        \graph[no placement, mygraph]{
+            s[at={(0,0)}];
+            a[at={(2, 1)}];
+            b[at={(2,-1)}];
+            c[at={(4, 1)}];
+            d[at={(4,-1)}];
+            t[at={(6, 0)}];
+            s -- {a, b} -- {c, d} -- t;
+            a -- {b, d};
+            c -- d;
+            {[edges={mypath}]
+                a -- {c, d};
+                b -- d;
+            }
+        };
+        \node[AlertOrange, above] at ($(a)!.5!(c)$) {$E[X, \bar X]$};
+        \begin{scope}[on background layer]
+        \node[mysubset, fit=(s) (a) (b),"{$X$}" {below, UniBlue}] {};
+        \end{scope}
+    \end{tikzpicture}
+    \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{限界効用逓減性}
     \small
-    \structure{記号} $f(a \mid X) := f(X \cup a) - f(X)$ ($X \subseteq V$, $a \in V\setminus X$ \\ {\color{gray}\dotfill $X$に$a$を追加したときの増分}
+    \structure{記号} $f(a \mid X) := f(X \cup a) - f(X)$ ($X \subseteq V$, $a \in V\setminus X$) \\ {\color{gray}\dotfill $X$に$a$を追加したときの増分}
     \begin{lemma}
         $f: 2^V \to \R$が劣モジュラ $\iff$ $f(a \mid X) \geq f(a \mid Y)$ ($\forall X \subseteq \forall Y \subseteq V$, $\forall a \in V\setminus Y$) \\
     \end{lemma}
     \structure{(証明)}
     \textbf{[$\implies$]} 
-    $X + a$と$Y$に対し，劣モジュラ性を使うと
+    $X \cup a$と$Y$に対し，劣モジュラ性を使うと
     \begin{align*}
-        f(X + a) + f(Y) &\geq f((X + a) \cup Y) + f((X + a) \cap Y) \\
-        &= f(Y + a) + f(X \cap Y).
+        f(X \cup a) + f(Y) &\geq f((X \cup a) \cup Y) + f((X \cup a) \cap Y) \\
+        &= f(Y \cup a) + f(X).
     \end{align*}
     移項すると限界効用逓減性が出る．
 \end{frame}
@@ -277,10 +349,11 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
         \]
     \end{block}
 
+    \pause
     \vfill
     \small
     \begin{overlayarea}{\textwidth}{9em}
-    \onslide*<1>{
+    \onslide*<2>{
     \structure{例:}
     \begin{itemize}
         \item K\H{o}nig--Egerv\'ary: $\displaystyle \max_{M: \text{マッチング}} |M| = \min_{X \subseteq V^+} |V^+ \setminus X| + |\Gamma(X)|$
@@ -288,7 +361,8 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
         \item 独立マッチング: $\displaystyle \max_{M: \text{独立マッチング}} |M| = \min_{X \subseteq V^+} r^+(V^+ \setminus X) + r^-(\Gamma(X))$
     \end{itemize}
     }
-    \onslide*<2>{
+    \onslide*<3>{
+    \structure{アルゴリズム} \\
     組合せ的なもの・連続最適化によるものなど様々な技法がある
     \begin{itemize}
         \item Gr\"otschel--Lov\'asz--Schrijver (1981): \textbf{Lov\'asz拡張} + 楕円体法
@@ -307,15 +381,15 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
     \setlength{\abovedisplayskip}{0pt}
     \begin{definition}
         \begin{align*}
-            P(f) &:= \{ x \in \R^V : x(X) \leq f(X) \; (\forall X \subseteq V)\} \quad \text{劣モジュラ多面体} \\
-            B(f) &:= \{ x \in P(f) : x(V) = f(V)\} \quad \text{基多面体}
+            P(f) &:= \{ x \in \R^V : x(X) \leq f(X) \; (\forall X \subseteq V)\} &\quad& \text{劣モジュラ多面体} \\
+            B(f) &:= \{ x \in P(f) : x(V) = f(V)\} &\quad &\text{劣モジュラ基多面体}
         \end{align*}
     \end{definition}
 
     \vfill
     cf. マトロイド多面体・基多面体（第7回）
         \begin{align*}
-            P(\bM) &:= \{ x \in \R^E : x(X) \leq r(X) \; (\forall X \subseteq E)\} \\
+            P(\bM) &:= \{ x \in \R_+^E : x(X) \leq r(X) \; (\forall X \subseteq E)\} \\
             B(\bM) &:= \{ x \in P(\bM) : x(E) = r(E)\} 
         \end{align*}
 \end{frame}
@@ -329,6 +403,7 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
         \]
     \end{block}
 
+    \pause
     \bigskip
     \begin{block}{貪欲法}
     \begin{algorithmic}[1]
@@ -336,8 +411,9 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
         \STATE $x \in \R^V$を次のように定める: $x(v_i) := f(v_i \mid \{v_1, \dots, v_{i-1}\})$ ($i = 1, \dots, n$)
     \end{algorithmic}
     \end{block}
-    cf. マトロイドの最小重み基に対する貪欲法
+    マトロイドの最小重み基に対する貪欲法（第7回）の一般化
 
+    \pause
     \bigskip
     \begin{theorem}
         貪欲法における$x$は基多面体上の線形最適化の最適解である．
@@ -465,16 +541,16 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
     \small
     \begin{columns}
     \begin{column}{.47\textwidth}
-    \begin{lemma}
+    \begin{theorem}[Lov\'asz 1983]
         \begin{enumerate}
             \item $\hat f$は凸関数．
             \item $\hat f(\ones_X) = f(X)$ ($X \subseteq V$)
             \item $\displaystyle \min_{w \in [0,1]^V} \hat f(w) = \min_{X \subseteq X} f(X)$
         \end{enumerate}
-    \end{lemma}
+    \end{theorem}
     \end{column}
     \begin{column}{.5\textwidth}
-        これらより，凸関数$\hat f$の最小化で劣モジュラ関数$f$の最小化ができる． \\
+        定理より，凸関数$\hat f$の最小化で劣モジュラ関数$f$の最小化ができる． \\
         \hfill $\longrightarrow$ 楕円体法\mycite{GLS81}
     \end{column}
     \end{columns}
@@ -551,11 +627,13 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
         $w \in \R^V$を$w(v) := \sup\{\alpha : v \in A_\alpha\}$と定めると，$w$は(P)の一意な最適解である．
     \end{theorem}
 
+    \pause
     \vfill
     \structure{系:}
     $w^*$: (P)の（一意）最適解とする．
     \begin{itemize}
-        \item $\{w^* \geq \alpha\}$は(SFM$_\alpha$)の最適解 \\ \alert{(SFM$_\alpha$)の全ての最適解が得られる！}
+        \item $\{w^* \geq \alpha\}$は(SFM$_\alpha$)の最適解 \\
+        \alert{全ての$\alpha$に対し，(SFM$_\alpha$)の最適解が得られる！}
         \item 特に，$\alpha = 0$とすると，次が得られる: \\ 
         $\{w^* \geq 0\}$は劣モジュラ最小化$\displaystyle \min_{X \subseteq V}f(X)$の最適解
     \end{itemize}
@@ -603,6 +681,7 @@ $S_\ell=Y$, $S_0=X\cap Y$, $T_\ell=X\cup Y$, $T_0 = X$なので，劣モジュ�
         \]
         特に，それぞれの（一意）最適解$w^*, x^*$に対し$w^* = -x^*$が成り立つ．
     \end{lemma}
+    \pause
     \begin{proof}
         凸解析におけるminimax定理を使う:
         \begin{block}{}
